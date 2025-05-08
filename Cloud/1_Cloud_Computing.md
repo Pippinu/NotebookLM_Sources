@@ -97,23 +97,22 @@ for both the provider and consumer.
 ## Cloud Computing Reference Architecture (NIST SP 500-292)
 
 ### What are the major roles defined in the NIST cloud computing reference architecture?
-* **Cloud Consumer:** A person or organization that maintains a business relationship with, and uses services from, Cloud Providers.
-* **Cloud Provider (CSP):** A person, organization, or entity responsible for making a service available to interested parties (Cloud Consumers).
-* **Cloud Auditor:** A party that can conduct independent assessment of cloud services, information system operations, performance, and security of the cloud implementation.
-* **Cloud Broker:** An entity that manages the use, performance, and delivery of cloud services, and negotiates relationships between Cloud Providers and Cloud Consumers. It can add value by offering intermediation, aggregation, or arbitrage services.
-* **Cloud Carrier:** An intermediary that provides connectivity and transport of cloud services from Cloud Providers to Cloud Consumers (e.g., telecommunication companies, network providers).
+* **Cloud Consumer:** **Person/Organization** that maintains a business relationship and uses services from Cloud Providers.
+* **Cloud Provider (CSP):** **Person/Organization/Entity** responsible for making a service available to Cloud Consumers.
+* **Cloud Auditor:** **Party** that can conduct independent assessment of cloud services about performance and security of the cloud implementation.
+* **Cloud Broker:** **Entity** that manages the use, performance, and delivery of cloud services, and negotiates relationships between Cloud Providers and Cloud Consumers. It can add value by offering intermediation, aggregation, or arbitrage services.
+* **Cloud Carrier:** Intermediary that provides connectivity of cloud services from Cloud Providers to Cloud Consumers (e.g., network providers).
 
 ### How do cloud auditors and cloud brokers contribute to the cloud ecosystem and service management?
 **Cloud Auditors:**
-* **Assurance & Compliance:** They provide independent assessment of cloud services against standards, security controls (e.g., ISO 27001, SOC 2), privacy regulations, and performance benchmarks. This helps build trust and ensures providers meet their obligations.
-* **Risk Assessment:** They help consumers understand the risks associated with a particular cloud service.
-* **Transparency:** Their reports can offer transparency into the provider's operations and controls.
+* **Assurance & Compliance:** Provide independent assessment of cloud services against standards, security controls, privacy regulations. This help to ensures that providers meet their obligations.
+* **Risk Assessment:** Help consumers understand the risks associated with a particular cloud service.
+* **Transparency:** Their reports offer transparency into the provider's operations and controls.
 
 **Cloud Brokers:**
 * **Service Intermediation:** They can enhance a given service by adding specific capabilities (e.g., identity management, improved security) or providing value-added services on top of existing cloud offerings.
 * **Service Aggregation:** They can combine and integrate multiple services (potentially from different providers) into a new, composite service, simplifying management for the consumer.
-* **Service Arbitrage:** They can select and switch between different cloud services or providers dynamically based on factors like cost, performance, or availability, aiming to provide the best value or terms to the consumer.
-* **Simplified Management:** They can simplify the complexity of dealing with multiple cloud providers or services for the consumer.
+* **Service Arbitrage:** They can switch between different cloud services or providers based on factors like cost and performance, aiming to provide the best value or terms to the consumer.
 
 ## Security in Cloud Computing
 
@@ -128,9 +127,7 @@ The **Shared Responsibility Model** dictates that security is a shared concern b
 **Cloud Consumers are typically responsible for "Security IN the Cloud":**
 * **Data Security:** Classifying and protecting their data, managing encryption keys (if applicable).
 * **Identity and Access Management (IAM):** Account managment and user permissions.
-* **Application Security:** Securing the applications they build or deploy on the cloud platform.
-* **Operating System, Network, and Firewall Configuration (especially in IaaS and PaaS):** Patching guest OS, configuring network security groups, firewalls, and intrusion detection/prevention systems they deploy.
-* **Compliance:** Meeting their own industry-specific or regulatory compliance requirements for the data and applications they put in the cloud.
+* **Operating System, Network, and Firewall Configuration (especially in IaaS and PaaS):** Patching guest OS, configuring firewalls and intrusion detection/prevention systems.
 
 ### Why is physical security of data centers important in cloud computing?
 Physical security of data centers is foundational to overall cloud security. It protects the hardware (servers, storage devices, network equipment) and the infrastructure that hosts cloud services from unauthorized physical access, theft, damage (due to environmental factors like fire, flood, or power failure), or interference.
@@ -139,7 +136,7 @@ If physical security is compromised:
 * **Service disruptions**.
 * **Loss of data integrity or availability**.
 
-Therefore, robust physical security measures (e.g., surveillance, biometric access controls, secure perimeters, environmental controls) are crucial for the CSP to ensure the confidentiality, integrity, and availability of the services they provide.
+Therefore, robust physical security measures (e.g., surveillance, biometric access controls, secure perimeters, environmental controls) are crucial for the CS Provider to ensure the confidentiality, integrity, and availability (CIA) of the services they provide.
 
 ---
 
