@@ -46,7 +46,20 @@ It requires **strong isolation mechanisms** to ensure that one tenant's activiti
 metering capability. This ensures that usage can be monitored, controlled, and reported, providing transparency
 for both the provider and consumer.
 
+### What is the difference between Scalability and Elasticity in cloud computing?
+* **Scalability** is the ability of a system to handle a growing amount of work by adding resources. \
+It can be:
+    * **Vertical** (scaling up: adding more power like CPU/RAM to an existing machine)
+    * **Horizontal** (scaling out: adding more machines to the pool). 
+
+* **Elasticity** is the ability to acquire or release resources, automatically and rapidly, depending on workload. \
+It focuses on matching the provisioned resources to the current demand in near **real-time**.
+
+* **Scalability vs Elasticity**: While scalability is a prerequisite for elasticity, elasticity emphasizes the speed and automation of scaling actions (both up/out and down/in).
+
 ## Service Models
+
+![alt text](./images/service_models.png)
 
 ### Describe the three main service models of cloud computing (SaaS, PaaS, IaaS).
 * **Software as a Service (SaaS):** **Consumer use the provider's applications running on a cloud infrastructure**.
@@ -99,8 +112,18 @@ for both the provider and consumer.
 ### What are the major roles defined in the NIST cloud computing reference architecture?
 * **Cloud Consumer:** **Person/Organization** that maintains a business relationship and uses services from Cloud Providers.
 * **Cloud Provider (CSP):** **Person/Organization/Entity** responsible for making a service available to Cloud Consumers.
+
+This two roles and responsibility of both roles are shown in blue and red, respectively:
+
+![alt text](./images/service_models.png)
+
 * **Cloud Auditor:** **Party** that can conduct independent assessment of cloud services about performance and security of the cloud implementation.
-* **Cloud Broker:** **Entity** that manages the use, performance, and delivery of cloud services, and negotiates relationships between Cloud Providers and Cloud Consumers. It can add value by offering intermediation, aggregation, or arbitrage services.
+* **Cloud Broker:** **Entity** that manages the use, performance, and delivery of cloud services, and negotiates relationships between Cloud Providers and Cloud Consumers. 
+
+    * ***Example**:* 
+        A cloud consumer may request service from a cloud broker instead of contacting a cloud provider directly. \
+        The cloud broker may create a new service by combining multiple services or by enhancing an existing service.
+    
 * **Cloud Carrier:** Intermediary that provides connectivity of cloud services from Cloud Providers to Cloud Consumers (e.g., network providers).
 
 ### How do cloud auditors and cloud brokers contribute to the cloud ecosystem and service management?
@@ -110,9 +133,19 @@ for both the provider and consumer.
 * **Transparency:** Their reports offer transparency into the provider's operations and controls.
 
 **Cloud Brokers:**
-* **Service Intermediation:** They can enhance a given service by adding specific capabilities (e.g., identity management, improved security) or providing value-added services on top of existing cloud offerings.
-* **Service Aggregation:** They can combine and integrate multiple services (potentially from different providers) into a new, composite service, simplifying management for the consumer.
-* **Service Arbitrage:** They can switch between different cloud services or providers based on factors like cost and performance, aiming to provide the best value or terms to the consumer.
+In general, a cloud broker can provide services in **three categories**:
+* **Service Intermediation:** They can enhance a given service by adding specific capabilities (e.g., identity management, improved security) or providing value-added services on top of existing cloud offerings. 
+
+    * ***Example**: A broker offers enhanced identity management and single sign-on capabilities for multiple SaaS applications.*
+
+* **Service Aggregation:** A cloud broker combines and integrates multiple services (also from different providers) into one or more new services. The broker provides data integration and ensures the secure data movement between the cloud consumer and multiple cloud providers. 
+
+    * ***Example**: A broker combines CRM (from provider A), marketing automation (from provider B), and analytics (from provider C) into a unified sales and marketing platform.*
+
+* **Service Arbitrage:** They can switch between different cloud services or providers based on factors like cost and performance, aiming to provide the best value or terms to the consumer. \
+Service arbitrage is similar to service aggregation except that the services being aggregated are not fixed, a broker has the flexibility to choose services from multiple agencies.
+
+    * ***Example**: A web hosting broker automatically moves a customer's website between different IaaS providers based on which provider offers the lowest price for the required resources at any given time.*
 
 ## Security in Cloud Computing
 
@@ -138,22 +171,13 @@ If physical security is compromised:
 
 Therefore, robust physical security measures (e.g., surveillance, biometric access controls, secure perimeters, environmental controls) are crucial for the CS Provider to ensure the confidentiality, integrity, and availability (CIA) of the services they provide.
 
----
-
-## Additional Potential Exam Questions
-
-### What is the difference between Scalability and Elasticity in cloud computing?
-* **Scalability** is the ability of a system to handle a growing amount of work by adding resources. It can be vertical (scaling up: adding more power like CPU/RAM to an existing machine) or horizontal (scaling out: adding more machines to the pool). Scalability is often a planned activity to accommodate long-term growth.
-* **Elasticity** is the ability to acquire resources as you need them and release resources when you no longer need them, often automatically and rapidly. It focuses on matching the provisioned resources to the current demand in near real-time. While scalability is a prerequisite for elasticity, elasticity emphasizes the speed, automation, and granularity of scaling actions (both up/out and down/in).
-
 ### If an IaaS Cloud consumer's application is compromised due to a vulnerability in the guest Operating System they manage, who is primarily responsible for the consequences and why?
 In an IaaS model, the **Cloud Consumer** is primarily responsible.
 **Why:** According to the shared responsibility model for IaaS, the consumer has control over and responsibility for the guest Operating System, including patching, maintenance, and securing applications deployed on it. The Cloud Provider is responsible for the security *of* the cloud (the underlying infrastructure and hypervisor), but not for vulnerabilities within the consumer-managed guest OS or applications.
 
-### Describe the three main categories of services a Cloud Broker can offer (Intermediation, Aggregation, Arbitrage) and provide a brief example for one.
-* **Service Intermediation:** The broker enhances a given service or provides value-added services on top of an existing cloud service. *Example: A broker offers enhanced identity management and single sign-on capabilities for multiple SaaS applications.*
-* **Service Aggregation:** The broker combines and integrates multiple services (potentially from different providers) into a new, composite service. This may involve data integration and ensuring secure data movement. *Example: A broker combines CRM (from provider A), marketing automation (from provider B), and analytics (from provider C) into a unified sales and marketing platform.*
-* **Service Arbitrage:** Similar to aggregation, but the services being aggregated are not fixed. The broker has the flexibility to choose or switch between services from multiple providers, often to optimize for cost, performance, or other criteria. *Example: A web hosting broker automatically moves a customer's website between different IaaS providers based on which provider offers the lowest price for the required resources at any given time.*
+---
+
+## Additional Potential Exam Questions
 
 ### Categorize the following Cloud Service Management functions into Business Support, Provisioning/Configuration, or Portability/Interoperability:
 * Managing customer billing and processing payments: **Business Support**
@@ -165,18 +189,9 @@ In an IaaS model, the **Cloud Consumer** is primarily responsible.
 ### Given a scenario describing a computing service, analyze whether it qualifies as a cloud service according to the five essential NIST characteristics. Justify your answer for each characteristic.
 *(This would require a specific scenario, similar to Task 1.2 in your assignment. The answer would involve evaluating the scenario against On-demand self-service, Broad network access, Resource pooling, Rapid elasticity, and Measured service, explaining how well the scenario meets each point, referencing NIST SP 500-322 options if applicable.)*
 
-### Briefly discuss the early vision of 'computing as a public utility' and mention one key historical figure associated with this idea.
-The early vision of 'computing as a public utility' foresaw a future where computing power and services could be accessed on demand, much like electricity or telephone services. Users would pay for what they consumed without needing to own or manage the complex underlying infrastructure.
-**John McCarthy**, a pioneer in artificial intelligence and inventor of LISP, is a key historical figure. In 1961, he stated, "computing may someday be organized as a public utility... The computer utility could become the basis of a new and important industry." Leonard Kleinrock also discussed "computer utilities" in 1969.
-
 ### What are the main layers involved in Service Orchestration within the NIST Cloud Computing Reference Architecture (SP 500-292)?
 The main layers are:
 * **Service Layer:** Defines interfaces for Cloud Consumers to access computing services (SaaS, PaaS, IaaS).
 * **Resource Abstraction and Control Layer:** Contains components (e.g., hypervisors, virtual machines, virtual storage) that abstract physical resources and control their allocation, access, and monitoring. This layer enables resource pooling, dynamic allocation, and measured service.
 * **Physical Resource Layer:** Includes all physical computing resources like hardware (CPUs, memory, networks, storage) and facilities (HVAC, power).
 
-### What were Amazon's early contributions to cloud computing that helped popularize the model?
-Amazon Web Services (AWS) played a pivotal role in popularizing cloud computing with the launch of:
-* **Simple Storage Service (S3) in 2006:** Offered scalable, on-demand data storage, allowing users to store and retrieve any amount of data from anywhere on the web.
-* **Elastic Compute Cloud (EC2) in 2006:** Allowed users to rent virtual servers (instances) by the hour, providing resizable compute capacity and making it easy to scale applications up or down.
-These services, with their pay-as-you-go pricing and self-service provisioning, demonstrated the practical viability and benefits of the cloud computing model on a large scale.
