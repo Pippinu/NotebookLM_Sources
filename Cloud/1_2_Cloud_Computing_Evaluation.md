@@ -30,13 +30,16 @@ A computing capability must exhibit all **five essential characteristics** (On-d
 * ***Rapid elasticity***: Capabilities can be elastically provisioned and released, in some cases automatically, to scale rapidly commensurate with demand. To the consumer, the capabilities available for provisioning often appear to be unlimited.\
 The scaling should be rapid, automated and near-real-time, or at least fast enough to support the requirements of the CSC.
 
-* *Example: An e-commerce website automatically scaling up the number of web servers during a holiday sale and scaling down after the peak.*
+    * *Example: An e-commerce website automatically scaling up the number of web servers during a holiday sale and scaling down after the peak.*
 
-***Measured service***: Cloud systems automatically control and optimize resource use by leveraging a metering capability appropriate to the type of service (e.g., storage, processing, bandwidth, and active user accounts). \
+* ***Measured service***: Cloud systems automatically control and optimize resource use by leveraging a metering capability appropriate to the type of service (e.g., storage, processing, bandwidth, and active user accounts). \
 Resource usage can be monitored, controlled, and reported, providing transparency for both the provider and consumer of the utilized service. \
 This allows for things like *pay-per-use billing*.
 
-* *Example: Paying for cloud storage based on the gigabytes consumed per month, or for compute instances based on hours of usage.*
+    * **Resilience:** The monitoring and reporting capabilities of measured services also contribute to increased **resilience**, this is the ability to provide and maintain an acceptable level of service in the face of faults and challenges to normal operation.
+    By continuously tracking resource usage and performance metrics, consumers can proactively identify potential issues (e.g., approaching capacity limits, performance degradation) and take corrective actions before failures occur. This enables the implementation of automated responses (like autoscaling) to maintain application availability and responsiveness, enhancing the overall resilience of the cloud solution.
+
+    * *Example: Paying for cloud storage based on the gigabytes consumed per month, or for compute instances based on hours of usage.*
 
 ## Cloud Service Models
 
