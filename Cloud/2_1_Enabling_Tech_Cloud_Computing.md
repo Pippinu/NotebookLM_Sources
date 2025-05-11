@@ -38,22 +38,35 @@ The layered view maps to cloud service models:
 
 ## 2. Architectural Styles for Distributed Systems
 
-Architectural styles define the vocabulary of components and connectors, their roles, how they are distributed, and the constraints on their combination. They provide a pattern for structural organization.
+Using Client-Server, P2P and Message Message Queuing as architectural styles examples, Architectural styles define:
+* **Components** (unit of software that encapsulates a function of the system) and **Connectors** (communication mechanism between components) **Vocabulary**
+    * *Example*: Client and Servers, Peers, Producer and Consumer; Network Protocols to handling requests and response, Message Queue and Message Broker.
+* Components and Connectors **roles**
+    * *Example*: Initiate requests, Presenting user interface, Handling user interaction, Create and send or Receive and process messages.
+* **Components distribution** among multiple machines
+    * *Example*: Centralized or Distributed Servers, Producers and Consumers on separate machines, Message Queue/Broker on dedicated or distributed infrastructure.
+* **Pattern for structural organization**.
+    * *Example*: 
+        * Hierarchical, centralized server(s) in Client-Server; 
+        * Decentralized, symmetric roles, direct peer-to-peer interaction in P2P; 
+        * Decoupled, asynchronous communication managed by the message queue/broker in Message Queuing.
 
 ### A. Software Architectural Styles (Logical Organization) (CONTINUE FROM HERE)
 
-These describe the logical arrangement of software components.
+Software architectural styles are based on the **logical arrangement** of components. They are helpful because they provide an **intuitive view** of the whole system, **despite its physical deployment**. They also identify the **expected interaction patterns** between them.
 
-1.  **Data-Centered Architectures:**
-    * Data is the fundamental element; access to shared data is core.
-    * **Repository Style:** Features a central data structure (repository) representing the system's current state, and independent components that operate on this data.
-        * *Databases:* System dynamics controlled by components triggering operations on the repository.
-        * *Blackboard Systems:* The central data structure (blackboard) triggers the selection of processes (knowledge sources) to execute. Used in AI, speech recognition.
-2.  **Data-Flow Architectures:**
-    * Data availability controls computation; orderly motion of data from component to component.
-    * **Batch Sequential Style:** Ordered sequence of separate programs; output of one is input to the next (often file-based). Common in scientific computing for pre-filter, analyze, post-process workflows.
-    * **Pipe-and-Filter Style:** Data processed incrementally as a stream through a sequence of "filters" connected by "pipes" (data streams, often in-memory buffers). Enables concurrency (pipelining).
-        * *Examples:* Unix shell pipes (`cat file | grep pattern | wc -l`), compiler stages (scan | parse | analyze | generate), MapReduce paradigm (Input -> Splitting -> Mapping -> Shuffling -> Reducing -> Final Result).
+The following are common software architectural styles that focus on the logical arrangement of software elements:
+
+1.  **Data-Centered Architectures:** Data is fundamental element of the system, Access to shared data is core characteristic.
+    * **Repository Style:** Features a central data structure (repository) and independent components that operate on this data.
+        * **Database Systems**: Components triggers operations on central data structure (Database).
+        * **Blackboard Systems**: Central data structure (blackboard) triggers components operation to execute. 
+            * Used in AI, speech recognition.
+2.  **Data-Flow Architectures:** Orderly motion of data from component to component, output of one is input to the next.
+    * **Batch Sequential Style:** Ordered sequence of separate programs; Whole output is required to be processed as input. 
+        * *Common in scientific computing for pre-filter, analyze, post-process workflows.*
+    * **Pipe-and-Filter Style:** Data processed a sequence of "filters" (components of the processing chain) connected by "pipes" (data streams, often in-memory buffers); As long as a consumable amount of output data is ready, it can be used as input.
+        * *Examples:*  MapReduce paradigm (Input -> Splitting -> Mapping -> Shuffling -> Reducing -> Final Result).
 3.  **Virtual Machine Architectures:**
     * An abstract execution environment (virtual machine) simulates features not available in the hardware/software, making applications portable.
     * **Rule-Based Style:** An inference engine uses rules/predicates and input facts/assertions to transform data or infer properties. Used in process control, network intrusion detection.
@@ -73,26 +86,28 @@ These describe the logical arrangement of software components.
 These describe the physical organization and deployment of components.
 
 1.  **Client/Server Architecture:**
-    * Features two main components: clients and a server, interacting over a network.
-    * Communication is typically client-initiated (request-response).
-    * Suitable for many-to-one scenarios where services are centralized.
-    * **Conceptual Tiers:** Presentation, Application Logic, Data Storage.
-    * **Thin-Client Model:** Server handles application logic and data storage; client handles presentation.
-    * **Fat-Client Model:** Client handles presentation and most application logic; server handles data storage.
+    * **Components**: Clients and a Server, interacting over a network.
+    * **Communication** is typically client-initiated (request-response).
+    * **Conceptual Tiers:** 
+        * Presentation: Interaction with the user.
+        * Application Logic: Core functionality of the application.
+        * Data Storage: Management and persistance of data.
+    * **Thin-Client Model:** Application logic and Data Storage (Server); Presentation (Client).
+    * **Fat-Client Model:** Data Storage (Server); Application and Presentation (Client).
     * **Multi-Tiered Models:**
-        * **Two-Tier:** Client (presentation) and Server (application logic + data storage). Suffers scalability issues.
-        * **Three-Tier/N-Tier:** Separates presentation, application logic, and data storage into distinct tiers. More scalable as tiers can be distributed. *Example:* Web browser (client), application server (business logic), database server (data storage).
-            * Modern web systems often use N-tiers with load balancers, multiple app servers, and sharded/replicated databases.
+        * **Two-Tier (Classic Model):** Client (presentation) and Server (application logic + data storage). Suffers scalability issues.
+        * **Three-Tier:** Separates presentation, application logic, and data storage into distinct tiers. More scalable as tiers can be distributed. 
+            *Example:* Web browser (client), application server (business logic), database server (data storage).
+        * **N-Tier**: Tree-tier with load balancers, multiple app servers, and sharded/replicated databases.
 
 2.  **Peer-to-Peer (P2P) Architecture:**
     * Symmetric architecture where all components (peers) play the same role, acting as both clients and servers.
     * Suitable for highly decentralized systems, offering better scalability in terms of the number of peers.
-    * Management and algorithm implementation can be more complex.
-    * *Examples:* File-sharing applications (Gnutella, BitTorrent), some distributed storage/cloud storage systems (e.g., Dynamo-style data partitioning across datacenters).
+        * *Examples:* File-sharing applications (BitTorrent).
 
 ### C. Models for Interprocess Communication (IPC)
 
-IPC is fundamental for distributed systems, enabling data exchange and coordination.
+**IPC** (Interprocess Communication) are mechanisms that allow different processes running on a computer system to **communicate** and **share data** with each other, it is what test together different components of a distributed system making them to act as a single system.
 
 1.  **Message-Based Communication:**
     * A foundational concept where discrete amounts of information (messages) are passed between entities.
@@ -103,47 +118,52 @@ IPC is fundamental for distributed systems, enabling data exchange and coordinat
 
 2.  **Interaction Patterns for Message-Based Communication:**
     * **Point-to-Point:** Direct addressing between a sender and a receiver. Can be direct communication or queue-based.
-    * **Publish-Subscribe:** Publishers emit messages on specific topics/events; subscribers register interest and receive relevant messages. Decouples publishers and subscribers. Uses push (publisher notifies) or pull (subscriber checks) strategies.
+    * **Publish-Subscribe** (Called "Event-Based" in slides): Publishers emit messages on specific topics/events; subscribers register interest and receive relevant messages. Decouples publishers and subscribers. Uses push (publisher notifies) or pull (subscriber checks) strategies.
     * **Request-Reply:** For each message sent, a reply is expected. Common in point-to-point models.
 
 ## 3. Service-Oriented Architecture (SOA)
 
-SOA is an architectural style that structures an application as a collection of interacting services. It emphasizes service-orientation, where services are the primary building blocks.
+SOA is an architectural style that structures an application as a collection of interacting services. It emphasizes **service-orientation**, where services are the primary building blocks.
 
 **What is a Service (in SOA)?**
-* A logical representation of a repeatable business activity with a specified outcome (e.g., check customer credit).
-* Self-contained and often a "black box" to consumers.
-* May be composed of other services.
-* **Characteristics (Don Box):**
-    * Boundaries are explicit (interaction is explicit, often message passing).
-    * Services are autonomous (exist independently, handle failures).
-    * Services share schema and contracts, not class definitions (promotes heterogeneity).
-    * Compatibility is determined by policy (semantic compatibility beyond structural).
+* A logical representation of a repeatable activity with a specified outcome (e.g., check customer credit).
+* **Self-contained** (does not rely on other services) and often a "**black box**" to consumers (which interact using exposed interface, like API).
+* May be **composed** of other services.
+* **Characteristics:**
+    * **Interfaces** to interact with the service are kept minimal to foster **reuse** and **simplify interaction**.
+    * **Autonomous services**, they can be integrated in different systems at the same time and indipendently can handle failures.
+    * Services share **schema** and **contracts**, not interfaces and classes (like OOP), so heterogeneity of distributed systems is promotod.
+        * Sceham: Defines structure of data exchanged between services.
+        * Contract: Defines structure of messages the service can send and receive.
+    * **Compatibility** is determined by policy (semantic compatibility beyond structural).
 
 **SOA Principles & Guiding Concepts:**
-* **Standardized Service Contract:** Services adhere to a communication agreement (e.g., WSDL).
+* **Standardized Communication:** Services adhere to a communication agreement.
 * **Loose Coupling:** Services are self-contained, minimizing dependencies.
 * **Abstraction:** Services hide their logic; defined by contracts.
 * **Reusability:** Designed as components, services can be reused.
 * **Autonomy:** Services control their encapsulated logic.
 * **Lack of State (Statelessness):** Services ideally maintain no state between requests from consumers, enhancing reusability and scalability.
 * **Discoverability:** Services defined by discoverable metadata (e.g., via UDDI registry).
-* **Composability:** Services can be orchestrated or choreographed to create complex operations.
+* **Composability:** Services can be *orchestrated* or *choreographed* to create complex operations.
 
 **Roles in SOA:**
-1.  **Service Provider:** Maintains and makes services available. Publishes service contracts in a registry.
-2.  **Service Consumer:** Locates service metadata (e.g., in a registry), develops client components to bind and use the service.
-3.  **Service Registry:** Stores service descriptors (e.g., WSDL files), enabling discovery (e.g., UDDI).
+1.  **Service Provider:** Maintains and makes services available. Defines and publishes service **contracts** (communication system) in a registry along with service **schemas** (data formats).
+2.  **Service Consumer:** Locates service descriptors in registry, develops client components to bind and use the service.
+3.  **Service Registry:** Stores **service descriptors** which defines everything a consumer need to know to use the service, it also provide **service discovery** mechanism to allow consumer to search for specific service.
+
+Service Providers and Consumer can belogn to different organizations or business domains.
 
 **Service Coordination:**
-* **Service Orchestration:** A central entity (orchestrator) coordinates the interaction and composition of services to execute a business process. (e.g., a travel planner service invoking flight, hotel, and car rental services).
-* **Service Choreography:** Coordinated interaction (message exchange) of services without a single point of control. Each service knows its role in the interaction. (e.g., online payment involving a seller service and a credit card company service).
 
-**Technologies for SOA:**
-* Historically: Distributed object technologies like CORBA, DCOM.
-* Predominantly: **Web Services** (SOAP, WSDL, UDDI) leveraging HTTP and XML.
+![alt text](./images/service_orchestration_choreography.png)
 
-## 4. Web Services (Brief Overview)
+* **Service Orchestration:** A central entity (*orchestrator*) coordinates the interaction of services to execute a business process. 
+    * *Example*: Travel planner service invoking flight, hotel, and car rental services.
+* **Service Choreography:** Coordinated interaction (message exchange) of services **without a single point of control**. Each service knows its role in the interaction. 
+    * *Example*: Online payment involving a seller service and a credit card company service.
+
+## 4. Web Services (SKIPPABLE)
 
 Web services are a prominent technology for implementing SOA, enabling interoperability across platforms using internet standards.
 * **SOAP (Simple Object Access Protocol):** XML-based protocol for exchanging structured information in Web service communication (method invocation, results).
@@ -158,8 +178,13 @@ Web 2.0 technologies (AJAX, JSON) further enhance web applications that consume 
 An architectural style that structures an application as a collection of small, autonomous, and independently deployable services. Services are typically organized around business capabilities and often owned by small, dedicated teams.
 
 **Core Ideas (from "Microservices Patterns" by Chris Richardson & "The Art of Scalability"):**
-* **Y-axis Scaling (Functional Decomposition):** The primary way microservices scale an application, by splitting it into services based on function or business capability.
-    * Contrasts with X-axis scaling (horizontal duplication/cloning of monoliths) and Z-axis scaling (data partitioning/sharding for monoliths).
+* **X-axis Scaling (Duplication):** Cloning the application across multiple identical instances. Each instance runs the entire application code and handles a portion of the overall load, typically behind a load balancer.
+    * *Example:* If one instance of your microservice can handle 100 requests per second, adding three more identical instances behind a load balancer theoretically allows you to handle 400 requests per second.
+* **Y-axis Scaling (Functional Decomposition):** Splitting application (*Monolith*) into services (*Microservice*) based on function.
+    * *Example:* Instead of a monolithic "*Order Management*" service, you might break it down into "*Order Processing*," "*Inventory Management*", "*Payment Processing*," and "*Shipping Management*" microservices.
+* **Z-axis Scaling (Data Partitioning):** Splitting data across multiple istances of the application.
+    * *Example:* Customer database can be splitted based on the first letter of the customer's last name, each letter is handled by an instance.
+
 * **Services as Units of Modularity:** Each service has a well-defined API, an impermeable boundary.
 * **Each Service Has Its Own Database:** Promotes loose coupling, allowing independent schema evolution and preventing one service from blocking another via database locks. This doesn't necessarily mean a separate database *server* for each, but logically distinct datastores.
 * **Enables Continuous Delivery/Deployment:**
