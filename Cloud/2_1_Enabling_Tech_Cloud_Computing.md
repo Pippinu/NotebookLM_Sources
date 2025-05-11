@@ -160,7 +160,8 @@ Service Providers and Consumer can belogn to different organizations or business
 
 * **Service Orchestration:** A central entity (*orchestrator*) coordinates the interaction of services to execute a business process. 
     * *Example*: Travel planner service invoking flight, hotel, and car rental services.
-* **Service Choreography:** Coordinated interaction (message exchange) of services **without a single point of control**. Each service knows its role in the interaction. 
+* **Service Choreography:** Coordinated interaction (message exchange) of services **without a single point of control**. \
+Each service knows its part in the overall flow and reacts to events or messages from other services.
     * *Example*: Online payment involving a seller service and a credit card company service.
 
 ## 4. Web Services (SKIPPABLE)
@@ -177,6 +178,9 @@ Web 2.0 technologies (AJAX, JSON) further enhance web applications that consume 
 
 An architectural style that structures an application as a collection of small, autonomous, and independently deployable services. Services are typically organized around business capabilities and often owned by small, dedicated teams.
 
+<center><img src="./images/scale_cube.png"></center>
+<br>
+
 **Core Ideas (from "Microservices Patterns" by Chris Richardson & "The Art of Scalability"):**
 * **X-axis Scaling (Duplication):** Cloning the application across multiple identical instances. Each instance runs the entire application code and handles a portion of the overall load, typically behind a load balancer.
     * *Example:* If one instance of your microservice can handle 100 requests per second, adding three more identical instances behind a load balancer theoretically allows you to handle 400 requests per second.
@@ -185,51 +189,87 @@ An architectural style that structures an application as a collection of small, 
 * **Z-axis Scaling (Data Partitioning):** Splitting data across multiple istances of the application.
     * *Example:* Customer database can be splitted based on the first letter of the customer's last name, each letter is handled by an instance.
 
-* **Services as Units of Modularity:** Each service has a well-defined API, an impermeable boundary.
-* **Each Service Has Its Own Database:** Promotes loose coupling, allowing independent schema evolution and preventing one service from blocking another via database locks. This doesn't necessarily mean a separate database *server* for each, but logically distinct datastores.
-* **Enables Continuous Delivery/Deployment:**
-    * Small service size improves testability and maintainability.
-    * Independent deployability allows for rapid, frequent updates.
-    * Autonomous teams can develop, deploy, and scale their services independently.
-
 **Benefits of Microservices:**
-* Enables continuous delivery/deployment of large, complex applications.
-* Services are small and easily maintained.
-* Services are independently deployable and scalable.
-* Enables autonomous, loosely coupled teams.
-* Allows easier experimentation with and adoption of new technologies for different services.
-* Better fault isolation (failure in one service is less likely to bring down the entire system).
+
+* **Enables continuous delivery/deployment of large, complex applications:** Achieved through the breakdown into **services as units of modularity**, where each small, focused service with a well-defined **API** and impermeable boundary improves testability and maintainability.
+* Services are **small** and **easily maintained** due to their focused functionality and clear API boundaries.
+* Services are **independently deployable** and scalable, allowing resources to be allocated precisely where they are needed.
+* Enables **autonomous**, **loosely coupled** (minimal dependencies on each other) teams.
+* Allows easier experimentation with and adoption of new technologies for different services, fostering innovation and preventing technology lock-in.
+* **Better fault isolation** (failure in one service is less likely to bring down the entire system): Enhanced by **each service having its own database** (logically distinct datastore, not different RDBMS), which promotes deep **loose coupling** and prevents cascading failures or resource contention at the data layer.
 
 **Drawbacks of Microservices:**
 * **Complexity of Distributed Systems:** Developers must handle inter-service communication, partial failures, and latency.
-* **Finding Service Boundaries:** Decomposing a system into the "right" set of services is challenging. Incorrect decomposition can lead to a "distributed monolith."
-* **Data Management:** Implementing transactions and queries that span multiple services is complex (requires patterns like Sagas, API Composition, CQRS).
+* **Finding right set of services:** Decomposing a system into the "right" set of services is challenging. Incorrect decomposition can lead to a "*distributed monolith*."
+* **Data Management:** Implementing queries that span multiple services is complex.
 * **Deployment Complexity:** Managing many moving parts in production requires a high level of automation (e.g., using PaaS, Docker orchestration like Kubernetes).
 * **Coordinating Multi-Service Deployments:** Deploying features that span multiple services requires careful coordination.
-* **When to Adopt:** May not be suitable for initial versions of applications, especially for startups where rapid iteration on a monolith is often faster.
 
 **Microservices vs. Monolithic Architecture:**
 * **Monolith:** Single deployable unit.
-    * *Pros (initially):* Simple to develop, test, deploy, and scale (horizontally).
+    * *Pros (initially):* Simple to develop, test, deploy, and scale (only horizontally).
     * *Cons (as it grows):* Becomes complex, slow to develop/build/start, difficult to scale components with conflicting needs, poor fault isolation, technology stack lock-in ("monolithic hell").
 * **Microservices:** Collection of small, independent services.
     * Addresses many cons of large monoliths but introduces distributed system complexities.
 
-**Comparing Microservices and SOA (from "Microservices vs. SOA" by Mark Richards):**
+### Comparison: SOA vs. Microservices Architecture
 
-| Feature                        | SOA (Service-Oriented Architecture)                                     | Microservices Architecture                                            |
-| :----------------------------- | :---------------------------------------------------------------------- | :-------------------------------------------------------------------- |
-| **Service Granularity** | Can range from small application services to large enterprise services. Often coarse-grained. | Generally small, fine-grained, single-purpose services.             |
-| **Component Sharing** | Share-as-much-as-possible (e.g., enterprise services, global data model). | Share-as-little-as-possible (favors bounded contexts, data per service). |
-| **Inter-service Communication**| Often uses "smart pipes" like an Enterprise Service Bus (ESB) with message processing logic. Heavyweight protocols (SOAP, WS*). | Typically "dumb pipes" (message brokers) or direct service-to-service communication. Lightweight protocols (REST, gRPC). |
-| **Data Management** | Often involves global data models and shared databases.                  | Each service typically owns its own database/datastore.               |
-| **Service Taxonomy** | More formal and layered (e.g., Business, Enterprise, Application, Infrastructure services). | Simpler (e.g., Functional services, Infrastructure services).         |
-| **Service Ownership** | Often different owners for different service types (business, shared services teams, app dev teams), requiring more coordination. | Typically application development teams own both functional and infrastructure services, enabling more autonomy. |
-| **Middleware** | Relies on messaging middleware (integration hub/ESB) for coordination, transformation, routing. | Generally avoids heavy middleware; may use an API Gateway (simpler facade). |
-| **Service Orchestration vs. Choreography** | Uses both. ESB often acts as an orchestrator.                          | Favors service choreography (services call each other directly or via events) over central orchestration. |
-| **Heterogeneous Interoperability** | Strong support via ESB for protocol transformation and integrating diverse systems. | Simpler integration, often relying on common protocols like REST. Less emphasis on protocol transformation. |
-| **Contract Decoupling** | Supported via ESB (message transformation, enhancement).              | Generally not supported; services and consumers expect matching contracts. |
-| **Application Scope** | Well-suited for large, complex, enterprise-wide systems needing integration with many heterogeneous applications. | Better suited for smaller, well-partitioned web-based systems or where independent scaling/deployment is key. |
+#### Service Characteristics
+
+* **Service Taxonomy:**
+    * Refers to how services are classified within an architecture.
+    * Classifications can be by service type (e.g., business service, infrastructure service) or by business area/function.
+    * Helps in organizing and understanding the roles different services play.
+* **Service Ownership and Coordination:**
+    * **Service Ownership:** Identifies the team responsible to manage a specific service.
+    * **Coordination:** Refers to the level of collaboration required between different teams (responsible for one or more different services) to fulfill a single business request or to make changes to the system.
+* **Service Granularity:**
+    * Describes how much business functionality a service encapsulates.
+    * From **fine-grained** (small, single-purpose services) to **coarse-grained** (larger services encompassing broader functionality).
+    * Impacts performance, transaction management, and development/deployment agility.
+
+| Feature                       | SOA (Service-Oriented Architecture)                                                                                       | Microservices Architecture                                                                          |
+| :---------------------------- | :------------------------------------------------------------------------------------------------------------------------ | :-------------------------------------------------------------------------------------------------- |
+| **Service Taxonomy** | **More formal and layered** <br> <li> Business services <li> Enterprise services <li> Application services <li> Infrastructure services.                               | **Simpler**, often two main types: <br> <li> **Functional services** supporting business operations <li> **Infrastructure services** for non-functional tasks like logging or security).          |
+| **Service Ownership & Coordination** | Often **different owners for different service types** <li> business users for Business services <li> Shared services teams for Enterprise services <li> Development teams for Application services. <br> This typically **requires significant coordination** across teams for request processing and changes. | Typically, small, autonomous application development teams own both functional and related infrastructure services. <br> This model promotes **minimal coordination** between teams. |
+| **Service Granularity** | Can range from small application services to very large, coarse-grained enterprise services. <br> It's common for enterprise services to represent large products or subsystems.                          | Generally **emphasizes small, fine-grained, single-purpose** services."                    |
+
+#### Architecture Characteristics
+
+* **Component Sharing:**
+    * **Degree of reusage** of common functionalities or data models accross different services.
+* **Service Orchestration vs. Choreography:**
+    * **Orchestration:** Involves a central controller that coordinates the interactions between multiple services.
+    * **Choreography:** Services interact with each other directly without a central controller.
+* **Middleware and API Layer:**
+    * **Middleware (typically in SOA):** Refers to an intermediary software layer, often an Enterprise Service Bus (ESB) or integration hub, that facilitates communication between services. It can handle message routing, transformation, protocol conversion, and service orchestration.
+    * **API Layer (typically in Microservices):** An optional layer, often an API Gateway, that acts as a single entry point for external clients. It can handle request routing, composition, and cross-cutting concerns like authentication and rate limiting, but is generally "dumber" than an ESB.
+* **Inter-service Communication (Access to remote services):**
+    * Defines how services interact with each other, including the communication protocols (e.g., HTTP/REST, gRPC, messaging queues like AMQP/JMS) and patterns (synchronous request/response, asynchronous messaging).
+
+
+| Feature                                  | SOA (Service-Oriented Architecture)                                                                                                | Microservices Architecture                                                                                                   |
+| :--------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------- |
+| **Component Sharing** | Share-as-much-as-possible architecture style (e.g., enterprise services, global data model, shared databases).                     | Share-as-little-as-possible architecture style (favors bounded contexts, each service typically owns its own data/datastore). |
+| **Service Orchestration vs. Choreography** | **Uses both**. <br> Middleware often acts as a central orchestrator for complex processes.           | **Service choreography** over Orchestration prefered.     |
+| **Middleware and API** | Relies on messaging **middleware** for coordination, routing, and protocol mediation. | Generally **avoids heavy middleware**; may use a lightweight **API Gateway for external clients**.                       |
+| **Inter-service Communication (Access to Remote Services)** | Often uses "smart pipes" like an ESB with message processing logic. | Typically uses "dumb pipes" (e.g., message brokers for asynchronous communication) or direct service-to-service communication using lightweight protocols (e.g., REST, gRPC). |
+
+#### Architecture Capabilities (CONTINUE HERE)
+
+* **Application Scope:**
+    * Refers to the overall size, complexity, and type of applications or systems for which an architectural pattern is best suited (e.g., small web applications, large enterprise-wide systems).
+* **Heterogeneous Interoperability:**
+    * The ability of the architecture to effectively integrate systems and services that are implemented in different programming languages, run on different platforms, or use different communication protocols.
+* **Contract Decoupling:**
+    * The degree to which a service consumer and a service provider can evolve their respective data formats and message structures (contracts) independently of each other, without breaking the interaction. This often involves a mediation layer that can transform messages.
+
+
+| Feature                          | SOA (Service-Oriented Architecture)                                                                                                   | Microservices Architecture                                                                                                     |
+| :------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------ | :----------------------------------------------------------------------------------------------------------------------------- |
+| **Application Scope** | Well-suited for large, complex, enterprise-wide systems that require integration with many heterogeneous applications and services.     | Better suited for smaller, well-partitioned web-based systems, or applications where independent scaling/deployment is critical. |
+| **Heterogeneous Interoperability** | Strong support via ESB/middleware for protocol transformation, message enhancement, and integrating diverse, often legacy systems.    | Simpler integration, often relying on common protocols like REST. Less emphasis on complex protocol transformation by design.  |
+| **Contract Decoupling** | Supported and often facilitated via ESB capabilities (e.g., message transformation, data mapping, versioning abstraction).            | Generally not a primary feature; services and their consumers are expected to adhere to well-defined, often versioned, contracts. Direct significant contract decoupling is less common. |
 
 **Key Distinguishing Concepts:**
 * **Bounded Context (Microservices):** Coupling of a service and its associated data as a self-contained unit with minimal dependencies.
