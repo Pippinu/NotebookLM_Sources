@@ -36,6 +36,8 @@ The layered view maps to cloud service models:
 * Middleware/Frameworks for Cloud Application Development (PaaS)
 * Hardware, OS, Virtual Hardware, Networking, OS Images, Storage (IaaS)
 
+<div style="page-break-after: always;"></div>
+
 ## 2. Architectural Styles for Distributed Systems
 
 Using Client-Server, P2P and Message Message Queuing as architectural styles examples, Architectural styles define:
@@ -51,7 +53,7 @@ Using Client-Server, P2P and Message Message Queuing as architectural styles exa
         * Decentralized, symmetric roles, direct peer-to-peer interaction in P2P; 
         * Decoupled, asynchronous communication managed by the message queue/broker in Message Queuing.
 
-### A. Software Architectural Styles (Logical Organization) (CONTINUE FROM HERE)
+### A. Software Architectural Styles (Logical Organization)
 
 Software architectural styles are based on the **logical arrangement** of components. They are helpful because they provide an **intuitive view** of the whole system, **despite its physical deployment**. They also identify the **expected interaction patterns** between them.
 
@@ -121,6 +123,8 @@ These describe the physical organization and deployment of components.
     * **Publish-Subscribe** (Called "Event-Based" in slides): Publishers emit messages on specific topics/events; subscribers register interest and receive relevant messages. Decouples publishers and subscribers. Uses push (publisher notifies) or pull (subscriber checks) strategies.
     * **Request-Reply:** For each message sent, a reply is expected. Common in point-to-point models.
 
+<div style="page-break-after: always;"></div>
+
 ## 3. Service-Oriented Architecture (SOA)
 
 SOA is an architectural style that structures an application as a collection of interacting services. It emphasizes **service-orientation**, where services are the primary building blocks.
@@ -164,6 +168,8 @@ Service Providers and Consumer can belogn to different organizations or business
 Each service knows its part in the overall flow and reacts to events or messages from other services.
     * *Example*: Online payment involving a seller service and a credit card company service.
 
+<div style="page-break-after: always;"></div>
+
 ## 4. Web Services (SKIPPABLE)
 
 Web services are a prominent technology for implementing SOA, enabling interoperability across platforms using internet standards.
@@ -173,6 +179,8 @@ Web services are a prominent technology for implementing SOA, enabling interoper
 * **REST (Representational State Transfer):** An architectural style often used as a simpler alternative to SOAP for web services. Uses standard HTTP methods (GET, POST, PUT, DELETE) and typically JSON or XML for data exchange. Focuses on resources identified by URIs.
 
 Web 2.0 technologies (AJAX, JSON) further enhance web applications that consume these services, providing richer user experiences.
+
+<div style="page-break-after: always;"></div>
 
 ## 5. Microservice Architecture
 
@@ -212,6 +220,8 @@ An architectural style that structures an application as a collection of small, 
 * **Microservices:** Collection of small, independent services.
     * Addresses many cons of large monoliths but introduces distributed system complexities.
 
+<div style="page-break-after: always;"></div>
+
 ### Comparison: SOA vs. Microservices Architecture
 
 #### Service Characteristics
@@ -231,8 +241,10 @@ An architectural style that structures an application as a collection of small, 
 | Feature                       | SOA (Service-Oriented Architecture)                                                                                       | Microservices Architecture                                                                          |
 | :---------------------------- | :------------------------------------------------------------------------------------------------------------------------ | :-------------------------------------------------------------------------------------------------- |
 | **Service Taxonomy** | **More formal and layered** <br> <li> Business services <li> Enterprise services <li> Application services <li> Infrastructure services.                               | **Simpler**, often two main types: <br> <li> **Functional services** supporting business operations <li> **Infrastructure services** for non-functional tasks like logging or security).          |
-| **Service Ownership & Coordination** | Often **different owners for different service types** <li> business users for Business services <li> Shared services teams for Enterprise services <li> Development teams for Application services. <br> This typically **requires significant coordination** across teams for request processing and changes. | Typically, small, autonomous application development teams own both functional and related infrastructure services. <br> This model promotes **minimal coordination** between teams. |
-| **Service Granularity** | Can range from small application services to very large, coarse-grained enterprise services. <br> It's common for enterprise services to represent large products or subsystems.                          | Generally **emphasizes small, fine-grained, single-purpose** services."                    |
+| **Service Ownership & Coordination** | Often **different owners for different service types** <li> business users for Business services <li> Shared services teams for Enterprise services <li> Development teams for Application services. <br> This typically **requires significant coordination** across teams for request processing and changes. | Typically, **small development teams** own **both functional and related infrastructure services**. <br> This model promotes **minimal coordination** between teams. |
+| **Service Granularity** | From small application services to very large, coarse-grained enterprise services. <br> It's common for enterprise services to represent large products or subsystems.                          | Generally **emphasizes small, fine-grained, single-purpose** services."                    |
+
+<div style="page-break-after: always;"></div>
 
 #### Architecture Characteristics
 
@@ -250,52 +262,101 @@ An architectural style that structures an application as a collection of small, 
 
 | Feature                                  | SOA (Service-Oriented Architecture)                                                                                                | Microservices Architecture                                                                                                   |
 | :--------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------- |
-| **Component Sharing** | Share-as-much-as-possible architecture style (e.g., enterprise services, global data model, shared databases).                     | Share-as-little-as-possible architecture style (favors bounded contexts, each service typically owns its own data/datastore). |
-| **Service Orchestration vs. Choreography** | **Uses both**. <br> Middleware often acts as a central orchestrator for complex processes.           | **Service choreography** over Orchestration prefered.     |
-| **Middleware and API** | Relies on messaging **middleware** for coordination, routing, and protocol mediation. | Generally **avoids heavy middleware**; may use a lightweight **API Gateway for external clients**.                       |
-| **Inter-service Communication (Access to Remote Services)** | Often uses "smart pipes" like an ESB with message processing logic. | Typically uses "dumb pipes" (e.g., message brokers for asynchronous communication) or direct service-to-service communication using lightweight protocols (e.g., REST, gRPC). |
+| **Component Sharing** | **Share-as-much-as-possible** architecture style (e.g., enterprise services, global data model, shared databases).                     | **Share-as-little-as-possible** architecture style (favors bounded contexts, each service typically owns its own data/datastore). |
+| **Service Orchestration vs. Choreography** | **Uses both**. <br> Middleware often acts as a central orchestrator for complex processes.           | **Choreography over Orchestration** prefered.     |
+| **Middleware and API** | Relies on **messaging middleware** to coordinate service calls. <br> This middleware provies additional architectural capabilities such as mediation and routing. | Doesn't support messaggins middleware; <br> May use an **API Layer** to access the service.                       |
 
-#### Architecture Capabilities (CONTINUE HERE)
+<div style="page-break-after: always;"></div>
+
+#### Architecture Capabilities
 
 * **Application Scope:**
-    * Refers to the overall size, complexity, and type of applications or systems for which an architectural pattern is best suited (e.g., small web applications, large enterprise-wide systems).
+    * Overall size of the application that an architecture pattern can support
+        * *Example*: Microkernel architecture are better suited for smaller applications, event-driven architecture are well-suited for larger, more complex applications.
 * **Heterogeneous Interoperability:**
-    * The ability of the architecture to effectively integrate systems and services that are implemented in different programming languages, run on different platforms, or use different communication protocols.
+    * The ability of the architecture to effectively integrate systems and services that are implemented in **different programming languages**, run on **different platforms**, or use **different communication protocols**.
 * **Contract Decoupling:**
-    * The degree to which a service consumer and a service provider can evolve their respective data formats and message structures (contracts) independently of each other, without breaking the interaction. This often involves a mediation layer that can transform messages.
+    * The degree to which a service consumer and a service provider can **evolve their respective data formats and message structures** (contracts) independently of each other, **without breaking the interaction**. This often involves a **mediation layer** that can transform messages.
 
 
 | Feature                          | SOA (Service-Oriented Architecture)                                                                                                   | Microservices Architecture                                                                                                     |
 | :------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------ | :----------------------------------------------------------------------------------------------------------------------------- |
-| **Application Scope** | Well-suited for large, complex, enterprise-wide systems that require integration with many heterogeneous applications and services.     | Better suited for smaller, well-partitioned web-based systems, or applications where independent scaling/deployment is critical. |
-| **Heterogeneous Interoperability** | Strong support via ESB/middleware for protocol transformation, message enhancement, and integrating diverse, often legacy systems.    | Simpler integration, often relying on common protocols like REST. Less emphasis on complex protocol transformation by design.  |
-| **Contract Decoupling** | Supported and often facilitated via ESB capabilities (e.g., message transformation, data mapping, versioning abstraction).            | Generally not a primary feature; services and their consumers are expected to adhere to well-defined, often versioned, contracts. Direct significant contract decoupling is less common. |
+| **Application Scope** | **Large and complex systems** that require integration with many heterogeneous applications and services.     | **Smaller and well-partitioned web-based systems**, or **applications where independent scaling/deployment is critical.** |
+| **Heterogeneous Interoperability** | Support by **no limit** on multiple choices. <br> **Strong support via Middleware** supporting *protocol-agnostic heterogeneous interoperability*, not even communication protocol need to be known.   | Support by **reducing** number of choices for service integration. <br> Supports *protocol-aware heterogeneous interoperability*, communication protocol between services need to be known (e.g. REST) |
+| **Contract Decoupling** | **Supported** via ESB capabilities (e.g., message transformation, data mapping, versioning abstraction). **Contract Decoupling** is common.            | **Less supported**, Services and their consumers are expected to adhere to well-defined contracts. **Contract decoupling** is less common. |
 
 **Key Distinguishing Concepts:**
 * **Bounded Context (Microservices):** Coupling of a service and its associated data as a self-contained unit with minimal dependencies.
 * **API Gateway (Microservices):** An optional layer that acts as a single entry point for client requests, routing them to appropriate backend services. Can handle concerns like authentication, rate limiting.
 * **Enterprise Service Bus (ESB) (SOA):** A middleware component that facilitates communication and integration between services, often handling message routing, transformation, and orchestration.
 
+<div style="page-break-after: always;"></div>
+
 ## 6. Autonomic Computing
 
-Autonomic computing systems are systems that can manage themselves based on high-level objectives set by administrators, reducing the need for manual intervention.
+Autonomic computing systems are **systems that can manage themselves**, administrators gives broad desidered outcomes and the autonomic system figures how to achieve them on its own, **reducing the need for manual intervention**.
+
+* **Why Autonomic Computing?**: Modern IT systems are becoming **exceedingly complex**, involving millions of lines of code and heterogeneous components.
+* **Goal:** Create computing systems that can:
+    * Install, configure, tune, and maintain **themselves**.
+    * **Adapt** to changing conditions, workloads, and demands.
+    * **Handle** hardware/software failures and security threats with minimal human oversight.
+
+<div style="page-break-after: always;"></div>
+
+### The Autonomic Manager and MAPE-K Cycle
+___
+
+![alt text](./images/autonomic_element.png)
+
+Core of an autonomic system is the **Autonomic Manager**, an intelligent component that oversees a **Managed Element** which can be an hardware (such as a CPU or a Printer), software resource (such as DB) or even an application service. \
+The Autonomic Manager operates through a **continuous control loop**, referred as the **MAPE-K cycle** to oversee the Managed Element.
 
 **MAPE-K Cycle:** The core control loop for an autonomic manager:
-1.  **Monitor (M):** Collects data (metrics, system states) from the managed element (resource/system) using sensors.
+1.  **Monitor (M):** Collects data (metrics, system states) from the Managed Element using sensors.
 2.  **Analyze (A):** Processes and interprets monitored data to detect patterns, anomalies, predict future states, and identify issues or opportunities for optimization. Compares data with thresholds or desired states.
 3.  **Plan (P):** Develops a strategy or a sequence of actions to achieve the desired objectives or to correct deviations, based on the analysis.
-4.  **Execute (E):** Implements the planned actions, interacting with the managed element through effectors to apply necessary changes (e.g., allocate/deallocate VMs, reroute traffic).
-5.  **Knowledge (K):** A shared knowledge base containing policies, system models, historical data, and other information used by the M, A, P, and E components to make decisions.
+4.  **Execute (E):** Implements the planned actions, interacting with the Managed Element through **Effectors** to apply necessary changes (e.g., allocate/deallocate VMs, reroute traffic).
+5.  **Knowledge (K):** A **shared** knowledge base containing policies, system models, historical data, and other information **used** by the M, A, P, and E components **to make decisions**.
 
 **Autonomic Element:** Consists of one or more managed elements controlled by an autonomic manager. It uses sensors to monitor and effectors to act upon the managed element.
 
-**Self-* Properties of Autonomic Systems:**
-* **Self-Configuration:** Ability to adjust system configurations seamlessly to adapt to varying and unpredictable conditions.
-* **Self-Healing:** Ability to detect, diagnose, and repair problems to remain functional when faults arise.
-* **Self-Protection:** Ability to detect threats and take appropriate actions to protect the system from attacks or unauthorized access.
-* **Self-Optimization:** Ability to continuously monitor and adjust resources or parameters for optimal operation (e.g., performance, cost-efficiency).
+<div style="page-break-after: always;"></div>
 
-**Autonomic Manager Configuration Policies:** Define high-level objectives and guide the manager's behavior.
+### "Self-*" Properties 
+___
+
+* **Self-Configuration:** The ability of components and systems to **automatically configure themselves** according to high-level policies that specify what is desired, not necessarily how to achieve it. \
+New components should integrate **seamlessly**, and the rest of the system should adjust automatically.
+    * **In Cloud:** Adapting to changes in the environment, such as installing missing or outdated components based on alerts, without human intervention.
+
+    * *Example (Kephart): When a new component is introduced, it learns about the system, registers itself, and other components adapt.*
+    * *Example (FC2): An Autonomic Manager (AM) installing missed or outdated components based on system alerts.*
+
+* **Self-Healing:** Ability to detect, diagnose, and repair hardware and software problems to remain functional when faults arise.
+    * *Example (Kephart): A system detecting a faulty software module, reverting to an older version, diagnosing the issue, and alerting a developer.*
+    * *Example (FC2, Scenario 2): An AM monitors the health of image recognition app instances, checks if the number of healthy instances is above a threshold (e.g., seven), and starts new instances if needed, adding them to a load balancer.*
+
+    * **In Cloud:** Identifying, analyzing, and recovering from faults automatically to improve performance through fault tolerance and reduce the impact of failures.
+        * **Common Cloud Failures:** Unexpected configuration changes, resource unavailability, overloading, memory shortages, network failures. (Source: FC2 Answers, Q2.11)
+    * **Handling Techniques:** Check-pointing (restarting failed tasks on other resources), failure forecasting, replication. (Source: FC2 Answers, Q2.11)
+
+* **Self-Protection:** Ability to automatically detect threats or failures that remain uncorrected by self-healing measures and take appropriate actions to protect the system from attacks or unauthorized access. Involves anticipating problems based on early warnings and taking steps to avoid or mitigate them.
+    * **In Cloud:** Protecting against intrusions and threats by detecting malicious attacks and maintaining system security and integrity.
+    * **Handling Techniques:** Secure scheduling policies, trust management systems (behavioral auditing), intrusion detection techniques. (Source: Singh and Chana, Sec 6.5.4)
+    
+* **Self-Optimization:** The ability of components and systems to continually seek opportunities to improve their own performance and efficiency (in terms of performance or cost). They monitor, experiment with, and tune their own parameters.
+    * **In Cloud:** Improving performance, such as by dynamically scheduling tasks to optimize resource utilization and complete workloads efficiently, reducing overloading or underloading.
+    * *Example (Kephart): Systems proactively seeking and applying the latest updates to improve function.*
+    * *Example (FC2, Scenario 1): An AM monitors web app metrics (CPU, response time), analyzes SLO violations, plans the number of VMs to add/remove to meet SLOs while minimizing costs, and executes the VM allocation/deallocation.*
+
+<div style="page-break-after: always;"></div>
+
+### Autonomic Manager Configuration Policies
+___
+
+High-level objectives and constraints that guide the Autonomic Manager's behavior are defined through policies.
+
 1.  **Event-Condition-Action (ECA) Policies:**
     * Format: `WHEN event OCCURS AND condition HOLDS THEN execute action`.
     * *Example:* "When 95% of Web servers' response time exceeds 2s AND there are available resources, THEN increase the number of active Web servers."
@@ -318,4 +379,3 @@ Autonomic computing systems are systems that can manage themselves based on high
     * The model is used to reason about the system and plan adaptations.
     * If the model is invalidated, ECA-like rules can serve as repair strategies.
 * **Planning Techniques:** Optimization (linear/non-linear programming), heuristics, metaheuristics (e.g., genetic algorithms), Markov Decision Processes (MDP), Machine Learning/Deep Learning techniques.
-
