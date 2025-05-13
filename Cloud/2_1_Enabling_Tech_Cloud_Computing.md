@@ -362,20 +362,131 @@ High-level objectives and constraints that guide the Autonomic Manager's behavio
     * *Example:* "When 95% of Web servers' response time exceeds 2s AND there are available resources, THEN increase the number of active Web servers."
     * Can lead to conflicts as the number of policies increases.
 2.  **Goal Policies:**
-    * Specify criteria that characterize desirable states, leaving the system to determine how to achieve them.
+    * Specify criteria of the **desirable states**, leaving the system to determine how to achieve them.
     * *Example:* "The response time of the web server should be under 2s."
-    * Require planning to determine how to achieve the goal. May only distinguish between desirable/undesirable states.
+    * Require planning to determine how to achieve the goal. **May only distinguish between desirable/undesirable states**.
+    * *Example:* "How a given goal can be achieved."
 3.  **Utility Function Policies:**
-    * Define a quantitative level of desirability (utility) for each possible system state. The system aims to maximize this utility.
+    * Define **level of desirability** (*utility*) for each possible system state. The system aims to **maximize utility**.
     * Takes various parameters as input and outputs a utility value.
-    * *Example:* A function `U = F(ResponseTime_Web, ResponseTime_App)` returns the utility for given response times.
-    * Can be very complex to define accurately, as all influencing factors must be quantified.
+    * *Example:* A function `U = F(ResponseTime_Web, ResponseTime_App)` returns the utility of each combination of web and server application response time.
+    * Can be **very complex to define** accurately, as all influencing factors must be quantified.
 
 **Planning in Autonomic Systems:**
-* Involves using monitoring data (from sensors) to produce a series of changes (actions) to be effected on the managed element.
+* Involves using monitoring data (from sensors) to produce a series of changes (actions) to be performed on the managed element to **achieve desired goals** or **maintain stability**.
 * **Model-Driven Approach:**
-    * A model of the managed system (reflecting its behavior, requirements, goals) is created and maintained.
-    * The model is updated with sensor data.
-    * The model is used to reason about the system and plan adaptations.
-    * If the model is invalidated, ECA-like rules can serve as repair strategies.
+    * A **model of the managed system** (reflecting its behavior, requirements, goals) is **created and maintained** within Knowledge base.
+    * The model is **updated with sensor data**.
+    * The model is used by the Autonomic Manager to reason about the system and **plan adaptations**.
+    * If the model is invalidated (e.g., due to unforeseen changes), ECA-like rules can serve as **repair strategies** or to trigger model relearning.
 * **Planning Techniques:** Optimization (linear/non-linear programming), heuristics, metaheuristics (e.g., genetic algorithms), Markov Decision Processes (MDP), Machine Learning/Deep Learning techniques.
+
+## 6. Autonomic Computing in the Cloud Context (SKIP? TO REVIEW)
+
+Applying autonomic principles to cloud computing aims to manage the inherent complexity, dynamism, and scale of cloud environments effectively.
+
+### 6.1. Need for Autonomic Cloud Computing
+(Source: Singh and Chana, Sec 1.1 [source: 2863-2864])
+* Cloud services depend on QoS, but heterogeneity, dynamism, and resource dispersion make fulfilling QoS requirements challenging with traditional methods.
+* Autonomic cloud computing can:
+    * Effectively allocate resources based on user QoS requirements.
+    * Heal unexpected failures automatically.
+    * Optimize QoS parameters (e.g., execution time, cost, reliability, resource utilization).
+    * Identify and schedule suitable resources for workloads to maximize resource utilization efficiency.
+    * Manage scheduling for both homogeneous and heterogeneous workloads.
+
+### 6.2. QoS Parameters in Autonomic Cloud Computing
+(Source: Singh and Chana, Sec 6.6, Fig 16 [source: 2951-2953]; FC2 Answers, Q2.1, Q2.3 [source: 2997, 2999])
+Research in autonomic cloud computing considers various QoS parameters. The most frequently considered (according to Singh and Chana's review) are:
+1.  **Cost** (e.g., monetary cost of resources, execution cost) - *Top considered (20%)*
+2.  **Resource Utilization** (e.g., CPU utilization, memory utilization) - *(17%)*
+3.  **Execution Time** (e.g., time to complete a workload) - *(17%)*
+4.  **Response Time** (e.g., time taken to respond to a user request) - *(16%)*
+5.  **Energy** (e.g., energy consumed by resources) - *(15%)*
+Others include: Reliability, Accuracy, Deadline, Computation Overhead, CPU speed, Scalability, Availability, Security, SLA Violation rate.
+
+### 6.3. Service Level Agreements (SLAs) and QoS
+(Source: Singh and Chana, Sec 3.5 [source: 2880-2882])
+* SLAs are crucial agreements between cloud consumers and providers, specifying QoS parameters (price, time, reliability, etc.).
+* **Main reasons for SLA violation:** (Source: FC2 Answers, Q2.2 [source: 2998])
+    * Unexpected events (Hardware/Software failures).
+    * Unstable demand (workload fluctuations).
+    * Service composition complexities (degradation in one component affects the whole).
+    * Under-provisioning of resources.
+    * Conflicting consumer needs or provider/consumer objectives.
+* Autonomic systems aim to monitor QoS continuously to detect and prevent SLA violations.
+
+### 6.4. Phases of Autonomic Resource Management in Cloud
+(Source: Singh and Chana, Sec 6, Fig 10 [source: 2926-2927])
+Autonomic resource management in the cloud can be categorized into several interconnected phases:
+
+1.  **Design of Application:** (Source: Singh and Chana, Sec 6.1 [source: 2927-2935])
+    * **Type of Application:** Workload (set of tasks) vs. Workflow (interrelated tasks, often represented by DAGs).
+    * **Domain of Application:** Scientific, business, healthcare, HTC, HPC. Different domains have different QoS needs (e.g., healthcare: high throughput, availability; geoscience: security, processing speed, large storage).
+    * **Application Presentation:** Language-based (e.g., XML) or Tool-based (e.g., GUI, Petri Nets).
+    * **I/O Data Requirements:** Large vs. Small datasets; sequential vs. parallel data input.
+
+2.  **Workload Scheduling:** (Source: Singh and Chana, Sec 6.2 [source: 2936-2937]; FC2 Answers, Q2.5, Q2.6, Q2.7 [source: 3001-3005])
+    * Involves two main functions:
+        * **Resource Allocation:** Assigning appropriate resources to suitable workloads on time for effective utilization.
+        * **Resource Mapping:** Matching workloads with appropriate resources based on QoS requirements (from SLAs) to optimize objectives like cost, execution time, and profit.
+    * **Scheduling Architecture:**
+        * **Hierarchical:** Multi-level schedulers; higher-level controls lower-level. *Pros:* Can use different scheduling techniques. *Cons:* Central controller is a single point of failure.
+        * **Centralized:** A single central controller makes all scheduling decisions. *Pros:* Single point of control. *Cons:* Not scalable, single point of failure.
+        * **Decentralized:** Resources assigned based on individual workload requirements; decisions made locally. *Pros:* Scalable. *Cons:* Hard to coordinate decisions, works best for homogeneous workloads/resources.
+    * **Scheduling Objective:** Typically optimizing for cost, time, resource utilization, or load balancing.
+    * **Scheduling Decision (Timing):**
+        * **Static:** Matchmaking of workload to resources based on requirements and availability, decided offline.
+        * **Dynamic:** Mapping and execution based on resource provisioning at runtime; provides scalability and reduces resource wastage.
+    * **Integration:** Combining results from different execution units or schedulers (especially in SOA-like environments).
+
+3.  **Resource Allocation (Mechanisms):** (Source: Singh and Chana, Sec 6.3 [source: 2939-2940]; FC2 Answers, Q2.8, Q2.9 [source: 3006-3009])
+    * Managed by a Cloud Resource Manager (CRM).
+    * **Decision Criteria (in distributed scheduling):**
+        * **Independent:** Each scheduler acts independently without considering overall resource utilization status.
+        * **Mutual:** Schedulers coordinate their decisions (e.g., low-level and high-level schedulers), which can reduce resource contention.
+    * **Coordination Mechanism:**
+        * **Group-Based:** Resources shared among groups of users with similar requirements. SLAs often defined at the group level. Aims for better performance and fault tolerance.
+        * **Market-Based:** Uses negotiation (based on SLAs) for resource provision. Economic entities buy/sell computing resources in a virtual market.
+    * **Intercommunication Protocol:** One-to-one (consumer-provider) vs. One-to-many (provider to multiple users).
+
+4.  **Monitoring:** (Source: Singh and Chana, Sec 6.4 [source: 2943-2944]; FC2 Answers, Q2.10 [source: 3010-3013])
+    * Essential for performance optimization by tracking resource utilization, system status, and service execution.
+    * **Levels of Monitoring:**
+        * **Execution Monitoring (Process/Task Level):** Tracks status (started, queued, completed, failed). Can be *active* (agent continually checks and modifies) or *passive* (local agent monitors against QoS in SLAs).
+        * **Status Monitoring (Infrastructure Level):** Autonomic Elements monitor system performance (resource/memory utilization, network usage, SLA deviations, resource uptime) to avoid SLA violations.
+        * **Service Monitoring (Workload as Service Executions):** Collects info on free resources, utilization, and load. Checks if execution meets QoS in SLAs.
+        * **Resource Usage Monitoring (Infrastructure Level):** Collects usage via metrics (resource/memory utilization) to avoid under/overloading and manage QoS (security, availability, performance). Balances consumer goals (min cost/time) and provider goals (min resources used).
+
+5.  **Self-Management (applying the self-* properties):** (Source: Singh and Chana, Sec 6.5 [source: 2946-2947])
+    * This phase applies the four self-* properties (Healing, Configuration, Optimization, Protection) using the insights from Monitoring and decisions from Planning.
+    * The most investigated properties in autonomic cloud research are Self-Optimization and Self-Configuration, followed by Self-Healing and Self-Protection. (Source: FC2 Answers, Q2.4 [source: 3000])
+
+## 7. Architectural Considerations for Autonomic Systems
+(Source: Kephart and Chess [source: 2835-2840])
+* Autonomic systems are envisioned as interactive collections of **autonomic elements**.
+* System self-management arises from both the internal management of individual elements and the interactions *between* these elements.
+* **Life Cycle of an Autonomic Element:** Includes design, implementation, test/verification, installation, configuration, optimization, upgrading, monitoring, problem determination, recovery, and uninstallation. Each stage presents unique challenges.
+* **Relationships Among Autonomic Elements:** Also have a life cycle:
+    * **Specification:** Describing capabilities and requirements in standard formats.
+    * **Location:** Discovering needed services/partners (e.g., via directory services).
+    * **Negotiation:** Reaching agreements (SLAs) for service provision (can range from simple posted-price to complex multi-attribute negotiations).
+    * **Provision:** Allocating internal resources based on agreements.
+    * **Operation:** Operating under the agreement, with ongoing monitoring.
+    * **Termination:** Ending the agreement and releasing resources.
+* **System-Wide Issues:** Security, privacy, trust, and the emergence of "middle agent" services (brokers, matchmakers, monitors).
+* **Goal Specification:** A critical human role is providing high-level goals and policies. Ensuring these are correct and that systems behave reasonably even with imperfect goals is a major challenge.
+
+## 8. Challenges and Future Directions
+(Source: Kephart and Chess [source: 2840-2844]; Singh and Chana, Sec 9 [source: 2972-2976])
+* **Engineering Challenges (Kephart):** Programming autonomic elements, testing/verification in complex environments, installation/configuration bootstrapping, monitoring without excessive overhead, problem determination, graceful recovery, managing upgrades, handling complex life cycles of elements and their relationships, system-wide security/privacy/trust, robust goal specification by humans.
+* **Scientific Challenges (Kephart):** Developing behavioral abstractions and models for emergent behavior, theories of robustness, learning and optimization in multi-agent adaptive environments, negotiation theory, automated statistical modeling.
+* **QoS-Aware Autonomic Cloud Computing Challenges (Singh & Chana):**
+    * Effective SLA management and violation detection.
+    * Dynamic and efficient autonomic resource provisioning.
+    * Ensuring diverse QoS requirements are met.
+    * Optimizing resource scheduling in heterogeneous and dynamic environments.
+    * Addressing energy efficiency.
+    * Improving decision-making with advanced data mining/machine learning.
+    * Developing decentralized, scalable autonomic techniques.
+    * Need for real-world testing and validation of proposed mechanisms.
