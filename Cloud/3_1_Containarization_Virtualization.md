@@ -96,130 +96,85 @@ Set of **sufficient conditions** for a computer architecture to support virtuali
         * Microkernel VMMs **handle CPU/memory**; device drivers are in a privileged guest OS (Domain 0).
         * Monolithic VMMs **handle everything**.
     * Multiple VMs can be managed by the Hypervisor which directly allocate resources to VMs, which is generally more efficient. ISA is presented to VMs.
-    * **Trap on Privileged Instructions**: When a virtualized OS tries to execute a kernel-only instruction, because it thinks that can interact directly with Hardware (given ISA presented by VMM), it causes a trap which transfer control to the hypervisor (if hardware virtualization is present). \
-    This **prevents** virtualized OS to access hardware or compromise other VM. \
-    The hypervisor inspects the instruction :
-        * if **from guest OS**, it performs it.
-        * if **from user program**, it emulates hardware behavior.
 
-Examples of Hypervisors (Type 1 and Type 2):
+**Trap on Privileged Instructions**: When a virtualized OS tries to execute a kernel-only instruction, because it thinks that can interact directly with Hardware (given ISA presented by VMM), it causes a trap which transfer control to the hypervisor .
+
+**Both type 1 and 2** VMMs use this mechanism, the difference is that Type 1 VMM can access directly the hardware while Type 2 has to pass through the host OS.
+
+This **prevents** virtualized OS to access hardware or compromise other VM.
+
+The hypervisor inspects the instruction :
+* If **from guest OS**, it performs it.
+* If **from user program**, it emulates hardware behavior.
+
+**Examples** of Hypervisors (Type 1 and Type 2):
 * Virtualization without HW support: ESX Server 1.0 (Type 1), VMware Workstation 1 (Type 2).
 * Paravirtualization: Xen 1.0 (Type 1), VirtualBox 5.0+ (Type 2).
 * Virtualization with HW support: vSphere, Xen, Hyper-V (Type 1), VMware Fusion, KVM, Parallels (Type 2).
 
-### Full Virtualization (CONTINUE FROM HERE)
+### Full Virtualization 
 
-The VMM (Hypervisor) scans the instruction stream.
-Noncritical instructions run directly on hardware. Critical (privileged, control- and behavior-sensitive) instructions are trapped to the VMM, which emulates their behavior.
-Uses binary translation or hypercalls, .
-Guest OS is unaware of virtualization and its codebase is unmodified.
+Full virtualization was the **initial goal of virtualization**, it aims to create an environment where a standard, unmodified guest operating system can run without being aware that it's being virtualized. The guest OS believes it has direct access to hardware.
 
-### Challenges of Virtualization on x86
+#### How it Works
+**Instruction Stream Scanning:** Hypervisor constantly monitors the instructions the guest OS tries to execute.
+* **Noncritical Instructions:** **Executed on host hardware** for efficiency.
+* **Critical Instructions:** Trapped, so VMM intercepts them and emulate hardware behavior, ensuring the guest OS functions correctly but safely.
 
-* Original x86 architecture was not fully virtualizable because sensitive instructions weren't a subset of privileged ones.
-* Complexity of the x86 architecture.
-* Diverse x86 peripherals.
-* Need for a simple user experience.
+**x86 architecture** architecture posed some **challenges** to Full virtualization:
+* It was **not natively virtualizable**, a key issue was that sensible instructions (instructions that could alter the host machine, so break isolation) were not a subset of privileged instructions, this means that they could be executed by the guest OS without trapping to a hypervisor, making it hard to isolate VMs properly.
+* **Variety of hardware peripherals** in x86 systems added to the challenge of virtualizing them all correctly.
+* The x86 **architecture complexity**.
 
-### Binary Translation
+**Binary translation** overcomes this issue through the following mechanisms:
 
-Involves rewriting binary code before execution and emulating sensitive instructions.
-Guest OS privileged instructions trap to the hypervisor, which performs them after checks. Guest OS sensitive instructions trigger the hypervisor to rewrite code blocks, replacing sensitive instructions with hypervisor calls. Branches are replaced with calls to the hypervisor to continue translation.
-Dynamic binary translation is not overly expensive due to caching. Most code blocks do not contain sensitive/privileged instructions and run natively. User processes can be ignored as hardware ignores sensitive instructions in user mode. Guest OS code (Ring 1) is translated to avoid expensive traps.
+1.  **Proactive Code Analysis:** The hypervisor scans the instruction stream of the guest operating system *before* it is executed by the physical CPU.
+2.  **Identification of Problematic Instructions:** During this scan, the binary translator identifies any non-virtualizable sensitive instructions, as well as other privileged or critical instructions that require mediation.
+3.  **On-the-Fly Code Rewriting (Translation):** When a problematic instruction is found, the binary translator **replaces it with a new sequence of instructions**. This new sequence either:
+    * Safely emulates the intended behavior of the original instruction within the virtualized context.
+    * Replaces the instruction with a direct call to a specific routine within the hypervisor, which then handles the operation on behalf of the guest.
+4.  **Control Flow Management:** The translator also modifies branch instructions at the end of basic blocks to ensure that **control returns to the hypervisor**. This **allows the hypervisor to continue the process** on subsequent blocks of code before they are executed.
+5.  **Transparency to the Guest OS:** The guest operating system remains unmodified and unaware that its instructions are being translated while allowing safe and correct execution of its instructions.
 
-### Hardware-supported Virtualization Technology
+To **enhance performance**, translated blocks of code are often **cached**, so they do not need to be re-translated each time they are encountered. 
 
-Intel VT-x (2005) and AMD-v made sensitive instructions a subset of privileged instructions.
-Sensitive instructions now trap to the hypervisor, which handles them. (Note: Many traps can slow performance compared to binary translation).
+In essence, binary translation provided a software-based method to enforce the principles of virtualization (isolation and control) on architectures that lacked the necessary hardware support to do so via simple trap-and-emulate for all sensitive operations. It allowed hypervisors to manage and control guest OS behavior even when the hardware wouldn't automatically signal problematic instructions.
+
+**Hardware-supported Virtualization Technology**
+
+With the advent of Intel VT-x (Virtualizatin Technology) and AMD-v, sensitive instructions became a subset of privileged instructions. This is a crucial architectural change that makes virtualization much cleaner. Now, instructions that need to be managed by the hypervisor (sensitive ones) reliably cause a trap to the hypervisor because they are also privileged.
+
+**Performance Note:** While hardware support simplifies trapping, a lot of trap **slow down the performance** vs binary translation. This implies that even with hardware support, if every sensitive operation caused a trap and required hypervisor intervention, it could still be slower than a well-optimized binary translation system that minimizes traps by proactively rewriting code.
+
+![alt text](./images/full_vs_para.png)
 
 ### Paravirtualization
 
-Guest OS is modified to be aware it's running in a VM.
-Nonvirtualizable instructions are replaced by hypercalls.
-Hypervisor exposes an API that the guest OS uses instead of standard syscalls. Sensitive instructions are replaced by hypercalls.
-Requires the guest OS to support paravirtualization.
-Often leveraged by Microkernels, which handle core OS functions and interact with the hypervisor.
-Examples: Xen, KVM (Linux), Hyper-V.
+In paravirtualization, the guest OS is *modified* to be aware that it is running in a virtualized environment.
+
+Instead of the guest OS attempting to execute privileged or sensitive instructions that would cause a hardware trap (even if reliably handled by hardware-assisted virtualization), the modified guest OS makes direct calls to the hypervisor. These calls are known as ***"hypercalls"***
+
+### Modern Approach
+
+Modern virtualization solutions often employ a **hybrid approach**. 
+
+They leverage **hardware virtualization** support for core CPU and memory virtualization (providing strong isolation and allowing unmodified guests for these aspects) while using **paravirtualization** for other components, particularly I/O (e.g., network and disk drivers).
+
+Paravirtualized drivers (PV drivers) allow the guest OS to communicate more efficiently with the hypervisor for I/O operations, avoiding the overhead of emulating hardware devices which can involve numerous traps.
+
+This hybrid model seeks to combine the best of both worlds: the ability to run largely unmodified guests (thanks to hardware support) with the performance benefits of paravirtualization for specific, performance-critical interfaces.
 
 ## Containerization
 
-Containerization is Operating System-level virtualization. It leverages multiprogramming techniques at the OS level. Containers are often mistakenly thought of as lightweight virtual machines. They are fundamentally isolated groups of processes on a single host. No virtual machine manager or hardware emulation is used.
+**Containerization** is a form of operating system-level virtualization where applications run in isolated user spaces, called **containers**, which contains only OS libraries and dependecies required to run the process, microservice or application, all sharing the host OS.  
 
-### What is a Container
+Unlike traditional virtual machines, containers **do not require hardware emulation** or a **separate guest (virtualized) OS for each application**. They are essentially **isolated groups of processes on a single host** directed by a Container Manager (e.g. *Docker*)
 
-Isolated groups of processes running on a single host, sharing the same host OS kernel.
-No virtual machine manager or hardware emulation is used.
-Based on core Linux technologies: Namespaces, Cgroups, and UnionFS.
-Four major requirements for containers: run on a single host, are groups of processes (with a root), need isolation, and must fulfill common features.
-
-### Fundamental Technologies for Containerization
-
-* **chroot & pivot_root**
-    * Containerization evolved from the `chroot` mechanism, introduced in UNIX Version 7 (1979), later adopted in BSD and Linux.
-    * `chroot` allows changing the root directory of a process and its children to a specific directory, isolating their filesystem view. It's also known as "jail" and was used historically for security and early "microservices".
-    * Basic `chroot` involves creating a new root directory, copying necessary binaries/libraries, and running `chroot`.
-    * However, a simple `chroot` jail is limited, not a strong standalone security feature, and root users can easily escape. It doesn't provide process or network isolation.
-    * Modern container runtimes use `pivot_root(2)` instead of `chroot(2)`, which offers better isolation by moving old mounts to a separate directory.
-    * Obtaining a usable root filesystem (rootfs) from an OCI container image using `skopeo` and `umoci` is necessary for these mechanisms.
-
-* **Namespace**
-    * Wraps a global system resource in an abstraction layer.
-    * Processes within a namespace perceive their own isolated instance of the resource.
-    * Changes in a namespace are visible to other members but invisible outside the namespace.
-    * Namespaces were introduced in the Linux kernel starting in 2002 (Linux 2.4.19). Full "container ready" support was achieved in kernel 3.8 (2013) with the user namespace.
-    * Key namespaces include:
-        * **Mount (mnt)**: First implemented (2002). Isolates mount points. Used for secure jail-like environments. Allows creating separate mount spaces (e.g., with `unshare -m` and `tmpfs`). `mountinfo` in `/proc` can show mounts. Supports different mount flavors (shared, slave, private, unbindable).
-        * **UNIX Time-sharing System (uts)**: Introduced in Linux 2.6.19 (2006). Isolates the domain name and hostname.
-        * **Interprocess Communication (ipc)**: Introduced in Linux 2.6.19 (2006). Isolates IPC resources (System V IPC objects, POSIX message queues). IPC objects are destroyed with the namespace.
-        * **Process ID (pid)**: Introduced in Linux 2.6.24 (2008). Gives processes independent sets of PIDs, allowing duplication across namespaces. Namespaces can be nested. The first process gets PID 1. `/proc/$PID/ns/pid` links to the namespace. Demonstrates creating isolated PID views using `unshare -fp --mount-proc` and remounting `/proc`.
-        * **User ID (user)**: Isolation introduced in Linux 3.5 (2012), unprivileged creation in 3.8 (2013). Isolates user and group IDs, allowing processes to be privileged inside while unprivileged outside. `/proc/$PID/{u,g}id_map` control mappings. The `setgroups` security issue is addressed with `/proc/$PID/setgroups`. Essential for rootless containers.
-        * **Cgroup**: Namespace added in Linux 4.6 (2016) to prevent leaking host information.
-    * System calls for namespace management:
-        * `clone()`: Creates a new process in one or more new namespaces.
-        * `unshare()`: Allows a process to disassociate from shared execution context, creating new namespaces for itself.
-        * `setns()`: Joins an existing namespace via a file descriptor (e.g., from `/proc/$PID/ns/*`).
-    * The `/proc` filesystem provides magic links (`/proc/$PID/ns/*`) that act as handles to namespaces for use with `setns(2)`.
-    * Tools from the `util-linux` package (like `lsns`) provide command-line wrappers for namespace operations.
-
-* **Cgroups (Control Groups)**
-    * Primary goal: Resource limiting, prioritization, accounting, and controlling.
-    * Organizes processes into hierarchical groups.
-    * Interface provided through a pseudo-filesystem called `cgroupfs` (`/sys/fs/cgroup`).
-    * Allows setting limits (e.g., memory limits via files like `memory.limit_in_bytes`, `memory.swappiness`) and assigning processes to groups (`cgroup.procs`) by writing the PID.
-    * Cgroup v2 (2013) introduced major redesigns. The cgroup namespace was added in Linux 4.6 (2016). Demonstrates creating and managing cgroups manually via the filesystem.
-
-* **UnionFS**
-    * Allows logically merging several underlying directories or filesystems (branches) into a single virtual view (a union).
-    * Enables keeping related files in separate physical locations while presenting them together logically.
-    * A collection of merged directories is called a union, and each physical directory is a branch.
-    * Layers on top of multiple filesystems or directories within the same filesystem (stacking).
-    * Acts as a filesystem interface to the kernel and presents itself as the kernel's VFS to the filesystems it stacks on.
-    * A true "fan-out" filesystem, capable of directly accessing many underlying branches.
-    * Assigns precedence to branches; higher precedence overrides lower.
-    * Combines directory contents and attributes, removing duplicates, when directories exist in multiple branches.
-    * If a file exists in multiple branches, the version in the higher-priority branch is used.
-    * Demonstrates how to mount Unionfs using the `mount` command with the `dirs` option, showing precedence and recursive merging.
-    * Supports mixing read-only and read-write branches, with the union being read-write overall.
-    * Uses copy-on-write semantics: writes to read-only branches are copied up to a higher-priority read-write branch (a copyup operation). Demonstrates patching a CD-ROM using this.
-    * Can explicitly mark branches read-only using `=ro` in the mount option, useful for source code versioning.
-    * Supports overlay mounts to replace the original directory with the unified view.
-    * Implementation details: Operations often traverse high-to-low (LOOKUP, CREATE), but UNLINK goes low-to-high. Uses "whiteouts" (e.g., `.wh.FILENAME`) in higher branches to hide files in lower branches, even read-only ones, maintaining UNIX semantics and handling errors.
-    * File Deletion Semantics:
-        * `DELETE_ALL`: Default, attempts to delete all instances.
-        * `DELETE_WHITEOUT`: Creates a whiteout instead of deleting lower files.
-        * `DELETE_FIRST`: Removes only the highest-priority entry, allowing lower files to show through (departs from standard UNIX, useful for versioning).
-    * Unionfs Snapshots: The `unionctl` utility allows dynamic branch changes (add/remove, change mode). Demonstrates creating and viewing snapshots using layers and merging changes with `snapmerge`.
-    * Suitable for various applications like merged ISOs, unified home directories, source versioning, snapshotting, and patching CD-ROMs. Performance shows low overhead.
-
-* **Composing Namespaces**
-    * Namespaces are composable, enabling complex isolation scenarios like Kubernetes Pods (isolated PIDs sharing a network interface).
-    * Demonstrates using `nsenter` with `/proc/$PID/ns/pid` to join an existing PID namespace.
-
-* **Demo Application**
-    * A simple C application can use the `clone(2)` syscall with various `CLONE_NEW*` flags to create a child process in new mount, network, UTS, IPC, PID, and user namespaces.
-    * This shows how container runtimes leverage namespaces, although it's not a working container itself.
+<center><img src="./images/VM_vs_Container.png"></center>
 
 ### Application Containers vs System Containers
+
+![alt text](./images/app_vs_sys_container.png)
 
 * **Application containers**:
     * Contain a single process.
@@ -234,62 +189,180 @@ Four major requirements for containers: run on a single host, are groups of proc
     * Used for providing underlying infrastructure.
     * Implementations: LXC/LXD, OpenVZ/Virtuozzo, BSD jails, Linux vServer.
 
+### Fundamental Technologies for Containerization
+
+* **chroot & pivot_root**
+    * Containerization evolved from the **`chroot` mechanism**, introduced in UNIX, later adopted in BSD and Linux.
+    * `chroot` allows changing the root directory of a process and its children to a specific directory, isolating their filesystem view.
+    * Basic `chroot` involves creating a new root directory, copying necessary binaries/libraries, and running `chroot`.
+    * However, a simple `chroot` is limited, not a strong standalone security feature, and root users can easily escape. It doesn't provide process or network isolation.
+    * Modern container runtimes use `pivot_root(2)` instead of `chroot(2)`, which offers better isolation.
+
+There is no network isolation, too. This missing isolation paired with the ability to leave the chroot jail leads into lots of security related concerns, because jails are sometimes used for wrong (security related) purposes. 
+
+How to solve this? **Linux namespaces**.
+
+* **Namespace**
+    * Wraps a global system resource in an abstraction layer.
+    * Processes within a namespace perceive their own isolated instance of the resource.
+    * Changes in a namespace are **visible to other members** but **invisible outside**.
+    * Key namespaces **examples** include: **(SKIPPABLE)**
+        * **Mount (mnt)**: Allows creating separate mount spaces, separated filesystem "mounted" to main filesystem.
+        * **UNIX Time-sharing System (uts)**: Introduced in Linux 2.6.19 (2006). Isolates the domain name and hostname.
+        * **Interprocess Communication (ipc)**: Introduced in Linux 2.6.19 (2006). Isolates IPC resources (System V IPC objects, POSIX message queues). IPC objects are destroyed with the namespace.
+        * **Process ID (pid)**: Introduced in Linux 2.6.24 (2008). Gives processes independent sets of PIDs, allowing duplication across namespaces. Namespaces can be nested. The first process gets PID 1. `/proc/$PID/ns/pid` links to the namespace. Demonstrates creating isolated PID views using `unshare -fp --mount-proc` and remounting `/proc`.
+        * **User ID (user)**: Isolation introduced in Linux 3.5 (2012), unprivileged creation in 3.8 (2013). Isolates user and group IDs, allowing processes to be privileged inside while unprivileged outside. `/proc/$PID/{u,g}id_map` control mappings. The `setgroups` security issue is addressed with `/proc/$PID/setgroups`. Essential for rootless containers.
+        * **Cgroup**: Namespace added in Linux 4.6 (2016) to prevent leaking host information.
+    * System calls for namespace management:
+        * `clone()`: Creates a new process in one or more new namespaces, arguments of this syscall allow to specify what namespace to create.
+        * `unshare()`: Allows a process to disassociate from shared execution context, creating new namespaces for itself.
+        * `setns()`: Joins an existing namespace via a file descriptor (e.g., from `/proc/$PID/ns/*`).
+
+* **Cgroups (Control Groups)**
+    * Primary goal: Resource limiting, prioritization, accounting, and controlling.
+    * Organizes processes into **hierarchical groups**.
+    * Interface provided through a pseudo-filesystem called `cgroupfs` (`/sys/fs/cgroup`).
+    * Allows setting limits (e.g., memory limits via files like `memory.limit_in_bytes`, `memory.swappiness`) and assigning processes to groups (`cgroup.procs`) by writing the PID.
+
+* **UnionFS**
+    * A collection of merged directories is called a **Union**, and each physical directory is a **Branch**.
+    * UnionFS allows logically **merging several directories or filesystems** (branches) **into a single virtual view** (a union).
+    * UnionFS **properties**: 
+        * Enables keeping related files in separate physical locations while presenting them together logically.
+        * Acts as a **filesystem interface** to the kernel and presents itself as the kernel's VFS to the filesystems it stacks on.
+        * **Assigns precedence** to branches; higher precedence branch overrides lower. 
+
+        <br>
+        <center><img width="50%" src="./images/branch_precedence.png"></center>
+        <br>
+
+        * **Combines** directory contents and attributes, **removing duplicates**, when directories exist in multiple branches.
+        * If a file exists in multiple branches, the version in the higher-priority branch is used.
+        * Supports **mixing read-only and read-write branches**, with the **union being read-write overall**.
+        * Uses **copy-on-write semantics**: writes to read-only branches are copied up to a higher-priority read-write branch (a copyup operation). Demonstrates patching a CD-ROM using this.
+
+* **Composing Namespaces**
+    * Namespaces are **composable**, enabling complex isolation scenarios like Kubernetes Pods (isolated PIDs sharing a network interface).
+
 ## Docker
 
-Docker is a popular containerization platform.
+### Docker Basics
+
+Docker is a containerization platform that provides the ability to package and run an application in a loosely isolated environment called a **container**. 
+
+* **Containers** are lightweight and contain everything needed to run the application, so you don't need to rely on what's installed on the host. 
+* **Container Image** is a standardized package that includes all of the files, binaries, libraries, and configurations to run a container. 
+    * Defined by a **Dockerfile**. 
+    * Can be found in **Docker Hub**, which is a public **registry**.
+* **Docker Registry**: Stores Docker Images, can be either Public (Docker Hub) or private.
+* **Docker Repository**: Colletion of **related Docker Images** within a Docker Registry.
+    * *Example:* Docker Rep. may contains everything you need to run a DB service.
+* There are two important principles of images:
+    * Images are **immutable**. Once an image is created, it can't be modified. You can only make a new image or add changes on top of it.
+    * Container images are composed of **layers**. Each layer represents a set of file system changes that add, remove, or modify files. Each instruction in a Dockerfile (`FROM`, `COPY`, `RUN`, `CMD`) creates a new **read-only** layer.
+        *Example:* If you are building a Python app, you can start from the Python image and add additional layers to install your app's dependencies and add your code. This lets you focus on your app, rather than Python itself.
 
 ### Docker Architecture
 
-Docker engine is a Client/Server application.
-* **Client (docker CLI)**: Command line interface to interact with the server.
-* **Server (Docker daemon)**: Creates and manages Docker objects (containers, images, networks, data volumes).
-The CLI uses the Docker REST API to communicate with the daemon.
+Docker engine is a Client/Server application:
+* **Docker CLI (Client)**: Command line interface to interact with the server using REST API.
+* **Docker Daemon (Server)**: Listen to Docker API requests and creates and manages Docker objects (containers, images, networks, data volumes).
+* They, either:
+    * Run on the **same system**
+    * Docker Client can connect to **remote Docker Daemon**
 
-### Images and Containers
+<center><img width="50%" src="./images/docker_cli_example.png"></center>
 
-* **Image**: A read-only template with instructions for creating a container. They are layered, defined by a Dockerfile.
-* **Container**: A runnable instance of an image. Managed with the CLI or API.
-When running a container (e.g., `docker run -i -t ubuntu /bin/bash`), the daemon locates/downloads the image, creates a new container, allocates a R/W filesystem layer on top of the image, creates a network interface, and starts the command. The container's R/W filesystem is isolated.
+*Example of CLI command*: W.r.t. above command, Docker Daemon does what follow: 
+
+1. Locate and, eventually, download Ubuntu image from registry.
+2. Create a new container using Dockerfile from Ubuntu image.
+3. Allocate R/W filesystem as final layer of the image.
+4. Create Newtork Interface connected to default network.
+5. Start container and run `bin/bash` command.
+
+* **Docker Compose**: Another Docker client that lets you work with applications consisting of a set of containers.With Docker Compose, you can define all of your containers and their configurations in a single YAML file. If you include this file in your code repository, anyone that clones your repository can get up and running with a single command.
+
+* **Docker Desktop**: All-in-on applciation that cointains Deamon, Compose, Kubernetes, ...
 
 ### Storage Options
 
-* **Container writable layer**: Does not persist after termination. Tightly coupled with the host, reducing portability. Reduced performance.
-* **Volumes**: Created and managed by Docker. Stored in a directory on the host but managed by Docker (isolated access). Can be mounted R/W or R in multiple containers simultaneously. Easier to back up/migrate, safer to share among containers. Volume drivers allow storage on remote/cloud providers, encryption, etc. Content can be pre-populated. Work on Linux and Windows. Managed via CLI or API.
-* **Bind mounts**: Mount any host filesystem area (file or directory) into a container, referenced by its host path. Can be created by the container if they don't exist. Shared with host processes. Not portable. Usually higher performance than volumes.
-* **Tmpfs mount**: Mounts a temporary memory area outside the container's writable layer. Persisted only in host memory. Removed when the container stops. Available only in Linux hosts. Not sharable among containers.
+By default all files created inside a container are stored on a **Container writable layer** (R/W filesystem mentioned above) that sits on top of the read-only, immutable image layers (from Dockerfile commands).
 
-Activity cases for storage options:
-* Backing up/migrating data: Volumes.
-* Sharing data among multiple running containers: Volumes.
-* Sharing configuration from host to containers: Bind mount (if host path is guaranteed).
-* Data shouldn't persist: Tmpfs mount.
-* Sharing source code/build artifacts: Bind mount (if host path is guaranteed).
-* Storing data on remote/cloud: Volumes.
-* Host filesystem structure guaranteed: Bind mount.
-* Host filesystem structure NOT guaranteed: Volumes.
+Data written to the container layer doesn't persist when the container is destroyed. This means that it can be difficult to get the data out of the container if another process needs it, reducing portability. **Solution** to this are:
+
+#### Volumes
+* **Persistent** storage mechanisms **managed by the Docker daemon**. 
+* **Stored in host filesystem** but managed by Docker (**isolated access**), in order to use it, you must **mount the volume to a container**. 
+* Can be mounted in **multiple containers simultaneously**. 
+* **Easier to back up/migrate** and **safer to share among containers**. 
+* Managed via **CLI or API**.
+
+Volumes are ideal for **performance-critical data processing** (given that they are in host filesystem, they have the same performance access of any host file) and **long-term storage needs**.
+
+#### Bind mounts
+* Create a direct link between host system path (any file or directory) and a container, allowing direct access to files or directories stored anywhere on the host.
+* **Can be created by the container**, if they don't exist. 
+* **Shared** with host processes, so both container and host can modify them **simultaneously**. 
+* **Not portable**. 
+* Usually higher performance than volumes.
+
+#### Tmpfs mount (Temporary filesystem)
+* Mounts a temporary memory area **outside the container's writable layer**. 
+* Persisted only in host memory. Removed when the container stops. 
+* **Available only in Linux** hosts. 
+* **Not sharable** among containers.
+
+These mounts are suitable for scenarios requiring temporary, in-memory storage, such as caching intermediate data, handling sensitive information like credentials, or reducing disk I/O. 
+**Use tmpfs mounts only when the data does not need to persist** beyond the current container session.
+
+#### Activity cases for storage options:
+* Backing up/migrating data: **Volumes**.
+* Sharing data among multiple running containers: **Volumes**.
+* Sharing configuration from host to containers: **Bind mount** (if host path is guaranteed).
+* Data shouldn't persist: **Tmpfs mount**.
+* Sharing source code/build artifacts: **Bind mount** (if host path is guaranteed).
+* Storing data on remote/cloud: **Volumes**.
+* Host filesystem structure guaranteed: **Bind mount**.
+* Host filesystem structure NOT guaranteed: **Volumes**.
 
 ### Networking
 
-Containers can connect to each other or non-Docker workloads.
-Containers don't need to be aware they are on Docker.
-Types of network drivers:
-* **Bridge**: Default driver. For standalone containers communicating with each other.
-* **Host**: Removes network isolation, container uses host networking directly. For standalone containers.
-* **Overlay**: Connects multiple Docker daemons for swarm services or standalone containers on different hosts to communicate.
-* **Macvlan**: Assigns a MAC address to a container, making it appear as a physical device on your network. Useful for legacy applications expecting direct physical network connection.
-* **None**: Disables networking for the container.
+**Container networking** refers to the ability for containers to connect to and communicate with each other, or to non-Docker workloads.
 
-Activity cases for networking drivers:
-* Migrating from VM setup: Macvlan.
-* Network stack not isolated: Host networks.
-* Containers on different hosts communicate: Overlay networks.
-* Multiple containers on same host communicate: User-defined bridge networks.
-* Containers look like physical hosts (unique MAC): Macvlan networks.
+Containers have networking enabled by **default**, and they can make outgoing connections. 
 
-### Outcome
+A container has **no information** about what kind of network it's attached to, or whether their peers are also Docker workloads or not. A container only sees a network interface with an IP address, a gateway, a routing table, DNS services, and other networking details. 
 
-* Covered Docker and its underlying technologies: Namespace, Cgroup, Union FS.
-* Explained roles of Docker daemon, CLI, and API.
-* Discussed Layered images.
-* Reviewed Storage options: volume, bind, tmpfs.
-* Outlined Networking concepts and drivers.
+That is, **unless the container uses the `none` network driver**.
+
+Types of network drivers are:
+
+#### Bridge
+* **Default** driver, if you don't specify a driver. 
+* For standalone containers communicating with each other.
+#### Host
+* **Removes network isolation** between container and host, so container uses host networking directly. 
+* For standalone containers.
+#### Overlay
+
+Can be used, either to:
+* **Connects multiple Docker daemons for swarm services**
+* Connects standalone containers on different hosts (Docker Daemons) to communicate.
+* Facilitate communication between a swarm service and a standalone container
+
+This strategy removes the need to do OS-level routing between these containers. 
+
+#### Macvlan
+* **Assigns a MAC address to a container**, making it appear as a physical device on your network. 
+* The Docker daemon **routes traffic to containers by their MAC addresses**.
+* Best choice when dealing with for **legacy applications** expecting direct physical network connection.
+#### None
+* **Disables networking** for the container.
+
+#### Activity cases for networking drivers:
+* Migrating from VM setup: **Macvlan**.
+* Network stack not isolated: **Host networks**.
+* Containers on different hosts communicate: **Overlay networks**.
+* Multiple containers on same host communicate: **User-defined bridge networks**.
+* Containers look like physical hosts (unique MAC): **Macvlan networks**.
