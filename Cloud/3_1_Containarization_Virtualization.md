@@ -345,7 +345,6 @@ Types of network drivers are:
 * **Removes network isolation** between container and host, so container uses host networking directly. 
 * For standalone containers.
 #### Overlay
-
 Can be used, either to:
 * **Connects multiple Docker daemons for swarm services**
 * Connects standalone containers on different hosts (Docker Daemons) to communicate.
@@ -366,3 +365,37 @@ This strategy removes the need to do OS-level routing between these containers.
 * Containers on different hosts communicate: **Overlay networks**.
 * Multiple containers on same host communicate: **User-defined bridge networks**.
 * Containers look like physical hosts (unique MAC): **Macvlan networks**.
+
+### Docker Workshop Questions:
+
+#### Getting started
+* Why you run the container docker/gettingstarted in detached mode?
+* What is the difference between a container and a container image?
+#### Sample application
+* What is the meaning of the docker’s directives used in the docker file? Please comment on each of the directives.
+* Why it is important to tag a container image?
+* Why we should bind a host port with the container port?
+* It is possible to bind two containers on the same host port?
+* Why, after stopping a container, you need to remove it?
+* It is possible to remove a running container, without stopping it before the removal?
+#### Update the application
+* It is possible to bind two containers on the same host port?
+* Why, after stopping a container, you need to remove it?
+* It is possible to remove a running container, without stopping it before the removal?
+#### Share the application
+* Given a container image available on a docker image repository, can you start an instance of the image on any docker host? Is there any limitation?
+#### Persist the DB
+* If you run two instances of the same container image, let’s call them container A and container B, and you create a file in container A, is that new file visible in container B?
+* What you can do with the “docker exec” command?
+* Let assume you need to use a volume. Why you need to mount the volume in the container file system? Does that mean you modify the container filesystem?
+* In this part of the tutorial, you have created a volume. Where is the volume located in the file system of your docker host?
+#### Use bind mounts
+* When you are in development mode, do you need to rebuild the container each time you update the app to see the changes? Why?
+* What is a development container?
+#### Multi container app & Docker Compose
+* What is a Docker service?
+* Can we spin up a single instance of a docker container using a docker-compose file?
+* Can we run a MySQL container and store the database structure and data in a volume?
+* Is the order of the services defined in a docker-compose file important, or it is irrelevant which service is defined first?
+* Is it mandatory to define the network in a docker-compose file?
+* If you would like to run a multi-container app, is it necessary to use docker compose (i.e. to define a service) or you can achieve the same objective using docker commands from the shell? Does a service offers more than just running a multiple container app with a single command?
