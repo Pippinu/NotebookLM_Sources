@@ -3,7 +3,6 @@
 ## Purpose and Approach of NIST SP 500-322
 
 ### NIST Cloud Computing Definition
-
 Cloud computing is a model for enabling ***ubiquitous***, convenient, on-demand network access to a shared pool of configurable computing resources (e.g., networks, servers, storage, applications, and services) that can be rapidly provisioned and released with minimal management effort or service provider interaction.
 
 ***Ubiquitous***: server and data can be located anywhere and accessed from anywhere.
@@ -22,7 +21,7 @@ A computing capability must exhibit all **five essential characteristics** (On-d
 * ***Resource pooling***: The provider's computing resources (e.g., storage, processing) are pooled to serve multiple consumers using a multi-tenant model with different physical and virtual resources dynamically assigned and reassigned according to consumer demand. \
  There is a sense of location independence, where the customer generally has no control or knowledge over the exact location of the provided resources but may be able to specify location at a higher level of abstraction (e.g., country, state, or datacenter). 
  
-    The key is the *ability* to serve **multiple tenants** using shared resources, each tenant has its own dedicated instance and is unaware of other tenants.\
+    The key is the *ability* to serve **multiple tenants** using shared resources, each tenant has its own logically dedicated instance and is unaware of other tenants.\
     It requires **strong isolation mechanisms** to ensure that one tenant's activities do not negatively impact or compromise another tenant.
 
     * *Example: Multiple customers' virtual machines running on the same physical server, or their data stored on a shared storage system, without them knowing the exact physical location.*
@@ -40,6 +39,30 @@ This allows for things like *pay-per-use billing*.
     By continuously tracking resource usage and performance metrics, consumers can proactively identify potential issues (e.g., approaching capacity limits, performance degradation) and take corrective actions before failures occur. This enables the implementation of automated responses (like autoscaling) to maintain application availability and responsiveness, enhancing the overall resilience of the cloud solution.
 
     * *Example: Paying for cloud storage based on the gigabytes consumed per month, or for compute instances based on hours of usage.*
+
+Okay, here's a brief summary of the evaluation methodology from NIST SP 500-322 that you can add to your notes. This focuses on how the document approaches determining if a service is a true cloud service according to the NIST definition.
+
+---
+
+## NIST SP 500-322: Cloud Service Evaluation Methodology
+
+NIST SP 500-322 provides a framework and detailed analysis to help **evaluate whether a given computing capability qualifies as a "cloud service"** according to the definition in NIST SP 800-145, and to categorize it by service or deployment model. 
+
+The core principle is that a service **must demonstrate all five essential characteristics** of cloud computing to be considered a cloud service.
+
+The methodology involves:
+
+* **Decomposition of Essential Characteristics**: Each of the five essential characteristics (On-demand self-service, Broad network access, Resource pooling, Rapid elasticity, and Measured service) is broken down into **primary criteria**.
+* **Evaluation Options (Option A & Option B)**: For many criteria within each characteristic, SP 500-322 offers two evaluation options:
+    * **Option A**: This is generally a **more objective measure**, often based on capabilities common to all Cloud Service Customers (CSCs) or verifiable by the Cloud Service Provider (CSP).
+    * **Option B**: This is often **more subjective** and depends on the specific requirements of the individual CSC. If a CSC uses Option B, the evaluation is specific to their needs and may not be directly comparable with evaluations done by other CSCs with different requirements.
+* **Entity for Confirmation**: The document often specifies whether the Cloud Service Customer (CSC), the Cloud Service Provider (CSP), or a third party is best positioned to confirm if a criterion is met. 
+    * *Example*, internal architectural details like resource pooling are typically confirmed by the CSP, while aspects like broad network access from required locations might be confirmed by the CSC based on their needs.
+* **Worksheets**: The document provides worksheets to systematically assess a service against the essential characteristics, service models, and deployment models.
+
+This approach allows for flexibility in interpretation while providing a structured way to determine alignment with the NIST cloud computing definition, recognizing that the final determination can involve both objective assessments and subjective judgments based on a consumer's specific needs.
+
+---
 
 ## Cloud Service Models
 

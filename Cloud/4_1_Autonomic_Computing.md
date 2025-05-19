@@ -197,8 +197,6 @@ Autonomic resource management in the cloud can be categorized into several inter
     * Developing decentralized, scalable autonomic techniques.
     * Need for real-world testing and validation of proposed mechanisms.
 
-Okay, here is a resume of the two papers you provided, following your specific instructions for the first paper.
-
 ## Resume of "6.1 A Review of Auto-scaling Techniques for Elastic Applications in Cloud Environments.pdf"
 
 This paper reviews **auto-scaling techniques** for elastic applications in cloud computing environments. 
