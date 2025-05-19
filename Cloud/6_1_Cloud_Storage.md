@@ -430,7 +430,7 @@ Data is indexed by a unique tuple: $$(row key:string, column key:string, timesta
     
 #### Tablet Location
 
-<center><img width="80%" src="./images/bigtable_tablet_location.png"></center>
+<center><img width="60%" src="./images/bigtable_tablet_location.png"></center>
 
 A **three-level tree** hierarchy is used to store tablet location info:
 1.  A **Chubby file** points to the **root tablet**.
@@ -452,7 +452,7 @@ Clients cache these locations and prefetch them to reduce lookup latency.
 
 #### Tablet Serving
 
-<center><img width="80%" src="./images/tablet_sstables.png"></center>
+<center><img width="60%" src="./images/tablet_sstables.png"></center>
 
 * Data for a tablet is stored in GFS as **SSTables**. 
 * Updates are written to a commit log and then to an in-memory (RAM) sorted buffer called a **memtable**. Older updates reside in SSTables (Disk). 
@@ -478,33 +478,102 @@ Clients cache these locations and prefetch them to reduce lookup latency.
 * **Exploiting SSTable Immutability:** Simplifies concurrency (no locks needed for reading SSTables), allows efficient row concurrency control (memtable rows are copy-on-write), transforms permanent deletion into garbage collection of obsolete SSTables (master performs mark-and-sweep), and enables fast tablet splits (child tablets share parent's SSTables).
 
 ## Amazon Dynamo 
-* A highly available and scalable distributed key-value store developed by Amazon for its e-commerce platform.
-* Used for services needing primary-key access, such as shopping carts, customer preferences, session management, etc., where traditional RDBMS might be inefficient or limit scalability and availability.
-* Emphasizes reliability and availability, trading off strict consistency for these properties.
-* **Consistency Model:** **Eventually consistent**. Updates propagate to all replicas eventually, not necessarily immediately.
-* **Replication:** Uses **optimistic replication**, where changes are allowed to propagate to replicas in the background. Reads/writes are successful if a minimum number of nodes (R/W quorum) complete the operation. This can lead to conflicting changes that must be detected and resolved (often at read time). The system is "always writable".
-* **Key Requirements and Design Principles:**
-    * **Query Model:** Simple read (`get(key)`) and write (`put(key, context, object)`) operations based on a unique key.
-    * **ACID:** Sacrifices strong ACID properties (particularly strict consistency) for higher availability.
-    * **Efficiency:** Designed to run on commodity hardware with low latency and high throughput.
-    * **Scalability:** Incrementally scalable by adding one storage host (node) at a time.
-    * **Symmetry & Decentralization:** Every node has the same responsibilities (peer-to-peer) rather than centralized control.
-    * **Heterogeneity:** Can account for varying capacities of nodes in the infrastructure.
-* **System Architecture Components:**
-    * **System Interface:**
-        * `get(key)`: Locates object replicas and returns a single object or a list of objects with conflicting versions along with a `context`.
-        * `put(key, context, object)`: Determines replica placement and writes them. The `context` is opaque system metadata (including version information) obtained from a previous read or an empty context for new writes.
-    * **Partitioning Algorithm:**
-        * Uses **consistent hashing** to distribute data (keys) across nodes arranged in a logical ring. Each data item's key is hashed to determine its position and thus its responsible node on the ring.
-        * To handle non-uniform data distribution and node dynamism, **virtual nodes** are used. Each physical node can be responsible for multiple virtual nodes on the ring. This helps in evenly dispersing load when nodes join or leave, and accounts for node heterogeneity (nodes with higher capacity can own more virtual nodes).
-    * **Replication:**
-        * Each data item is replicated on N hosts (N is a configurable parameter) for high availability and durability.
-        * Each key `k` is assigned to a **coordinator node** (typically the first node encountered when walking the ring clockwise from the key's position).
-        * The coordinator stores the key locally and replicates it at the N-1 clockwise successor nodes in the ring, forming a **preference list** for each key 100].
-    * **Data Versioning:**
-        * To handle concurrent updates in an eventually consistent system, Dynamo treats each modification as a new, immutable version of the data].
-        * **Vector clocks** `([node_id, counter], ...)` are used as part of the `context` to capture the version history and causality between different versions of an object].
-        * When a client reads an object, it may receive multiple divergent versions (if concurrent writes occurred). These versions, along with their vector clocks, are returned to the client]. The client (or application) is often responsible for "reconciling" these conflicts and writing back a resolved version]. If the system resolves conflicts, it might use a simple "last write wins" based on physical timestamps, but vector clocks allow for more sophisticated reconciliation.
+Dynamo is a highly available and scalable distributed key-value storage system developed and used by Amazon.com for its e-commerce platform. It's designed for services requiring an "always-on" experience, achieving high availability by, in some cases, sacrificing strong consistency.
+
+### System Assumptions and Requirements (Section 2.1)
+* **Query Model:** Simple read/write operations for binary objects (blobs, usually <1MB) identified by unique keys; no relational schema or multi-item operations. This because Dynamo target application that need to store objects that are relatively small and require simple read/write op.
+* **ACID Properties:** Prioritizes availability over strong consistency (the "C" in ACID). Provides no isolation guarantees and only single-key updates.
+* **Efficiency:** Must run on commodity hardware (standard, less expensive HW), meeting stringent SLAs (often 99.9th percentile latency and throughput), because critical for service operations. Allows services to tunes their specific performance/cost/availability/durability needs, with consequent tradeoffs.
+    * *Example*: Higher availabilty and durability (through data replication) translate in higher cost or slower write performance.
+
+### Service Level Agreements (SLA) (Section 2.2)
+SLAs are negotiated contracts between client and service on expected request rates for a particular API and service latencies under those conditions. Amazon's SOA relies on each service involved meeting its SLA. Amazon measures SLAs at the 99.9th percentile to ensure a good experience for most customers, rather than using averages or medians. Dynamo's design allows services to tune system properties and let service make their own tradeoffs to meet these demanding SLAs.
+
+### Design Considerations (Section 2.3)
+* **Consistency vs. Availability:** Strong consistency in traditional approaches, often reduces availability during failures. Dynamo uses ***optimistic replication*** (more below) for higher availability, where changes propagate in the background, tolerating temporary inconsistency that have to be solved later. This can lead to need of conflict resoultion.
+* **Eventual Consistency:** Dynamo is designed as an eventually consistent datastore, that is all updates reach all replicas eventually.
+* **Conflict Resolution:**
+    * **When:** To achieve an "always writeable" store (critical for services like shopping carts that should never reject updates), Dynamo pushes conflict resolution complexity to reads, rather than rejecting writes.
+    * **Who:** Resolution can be by the datastore (simpler approached like "last write wins") or by the application (which understands the data schema and can merge versions). Dynamo allows the application to choose, using better approaches, otherwise, data store do the job by applying simple approaches.
+* **Other Principles:** Incremental scalability (add nodes one at a time), symmetry (all nodes have same responsibilities), decentralization (peer-to-peer over centralized control), and heterogeneity (distribute work based on server capabilities).
+
+* **Optimistic vs Pessimistic Replication**: Optimistic replication prioritizes availability and "always writeable" characteristics, **accepting that inconsistencies might temporarily arise and will need to be resolved**. Pessimistic replication prioritizes strong consistency, potentially at the cost of availability or write latency if replicas are not reachable.
+
+### Related Work (Section 3)
+Dynamo is compared to other decentralized storage systems, P2P systems (like Freenet, Gnutella, Pastry, Chord, OceanStore, PAST), distributed file systems (like Ficus, Coda, GFS, Farsite), and databases (like Bayou, Bigtable). 
+
+Key differentiators for Dynamo are its primary goals: 1. Being "always writeable" for high availability where no updates are rejected.
+2. Its operation within a single administrative domain, where each node is assumed trusted.
+3. Its focus on simple key-value access without hierarchical namespaces or complex relational schemas, 4. Its design for low-latency (99.9th percentile) operations, achieved partly by being a **zero-hop DHT**, each node mantains enough info. locally to route a request to the appropriate node directly to avoid multi-hop routing.
+
+### System Architecture (Section 4)
+
+<center><img width="50%" src="./images/dynamo_core_architecture.png"></center><br>
+
+Dynamo employs several core distributed systems techniques:
+#### System Interface (Section 4.1):
+Exposes `get(key)` and `put(key, context, object)` operations.
+* `get(key)`: Locates replicas, returns a single object or a list of conflicting versions along with `context`.
+* `put(key, context, object)`: Writes replicas; the `context` is metadata (including version info).
+
+Keys are hashed (MD5) to 128-bit identifiers to **determine responsible storage nodes**.
+
+#### Partitioning Algorithm (NOT CLEAR) (Section 4.2)
+Uses **consistent hashing** to distribute keys across nodes on a logical "ring". 
+* **Consistent hashing**: Distributed hashing technique that allows for the distribution of data across a set of nodes (like servers in a distributed system) in such a way that **minimizes the number of keys that need to be remapped** when nodes are added or removed.
+Each node is assigned random positions (tokens) on the ring. To address non-uniform load distribution and heterogeneity, Dynamo uses **virtual nodes**: each physical node is responsible for multiple virtual nodes/tokens on the ring. This evens load distribution during node additions/removals and allows capacity-based token assignment.
+#### Replication (Section 4.3)
+Data is **replicated on N hosts** (N is configurable) for high availability and durability. A key's coordinator node stores the data locally and replicates it to N-1 clockwise successor nodes on the ring. The list of N nodes responsible for a key is its **preference list**, constructed to ensure distinct physical nodes, even with virtual nodes.
+#### Data Versioning (Section 4.4)
+To achieve **eventual consistency** (consistency model for distributed computing, more below) and handle concurrent updates, Dynamo treats **each modification as a new version of data**, allowing multiple versions to coexist.
+* **Vector Clocks:** `(node, counter)` pairs are associated with each object version to capture **causality** (more below) between different versions of the same object. They help determine if versions are ancestors, descendants, or in conflict (parallel branches). When updating, clients pass the `context` (containing the vector clock) from a prior read.
+* **Conflict Resolution:** If a read encounters **causally unrelated versions**, all are returned to the client for **semantic reconciliation** (e.g., merging shopping carts). The reconciled version then supersedes the divergent ones. Vector clock sizes are managed by truncating the oldest (node, counter) pair if a threshold is met, storing a timestamp with each pair to identify the oldest.
+    * **Eventual Consistency**: consistency model in distributed computing that ensures all nodes in a system will eventually agree on the same data, even if updates are made concurrently.
+    * **Causality**: Influence by which one event contributes to production of another.
+<center><h3>STOP HERE IN SLIDE</h3></center>
+
+#### Execution of `get()` and `put()` (Section 4.5)
+* Requests can be routed via a **load balancer** or a **partition-aware client library** (for lower latency). If a non-coordinator node receives a request, it forwards it to a node in the key's preference list.
+* Operations involve the first N healthy nodes in the preference list.
+* A **sloppy quorum** system is used with configurable **R (minimum read replicas)** and **W (minimum write replicas)**. For consistency, often **R+W > N**.
+* `put()`: Coordinator generates a new vector clock, writes locally, sends to N highest-ranked reachable nodes. **Success** if at least W-1 nodes respond.
+* `get()`: Coordinator requests versions from N highest-ranked reachable nodes, waits for R responses, returns result (possibly with multiple versions for client reconciliation).
+#### Handling Failures: Hinted Handoff (Section 4.6)
+**Hinted Handoff**: If a target node in the preference list is down/unreachable, the replica is sent to a different healthy node (not necessarily in the top N) with a "hint" indicating the intended recipient.
+
+The hinted node stores this replica temporarily and attempts to deliver it to the original target node once it recovers. This ensures R/W operations don't fail due to temporary issues. Setting W=1 maximizes write availability, even thought most Amazon services set a higher W to meet desidered durability.
+
+Hinted Handoff works only if node **failures are transient**, in case of permanent failure, more complex techiniques have to be used.
+
+#### Handling Permanent Failures: Replica Synchronization (Anti-entropy) (Section 4.7)
+An anti-entropy protocol using **Merkle trees** synchronizes replicas and handles permanent failures or lost hinted replicas.
+
+A Merkle tree is a hash tree where leaves are hashes of key values. Nodes exchange Merkle tree roots for common key ranges; if roots differ, they traverse down the trees to find and synchronize inconsistent keys, minimizing data transfer. Each node maintains a tree per key range it hosts.
+
+#### Membership and Failure Detection (Section 4.8)
+* **Ring Membership:** Node addition/removal is an explicit administrative operation issued to a Dynamo node. Changes are persisted and propagated via a **gossip-based protocol** for eventual consistency. Node-to-token mappings are also gossiped.
+* **External Discovery (Seeds):** Some nodes are designated as "seeds" (discoverable externally) to prevent logical ring partitions during membership changes.
+* **Failure Detection:** A local notion is used. If node A fails to communicate with node B, A considers B failed and uses alternate nodes for requests mapped to B's partitions, retrying B periodically. Explicit join/leave methods reduce the need for a globally consistent failure view.
+#### Adding/Removing Storage Nodes (Section 4.9)
+When a new node is added, it gets assigned random tokens. Existing nodes responsible for the key ranges now covered by the new node transfer the relevant data to it. This distributes bootstrapping load.
+
+### Implementation (Section 5)
+Each Dynamo node has three Java components: request coordination, membership/failure detection, and a pluggable local persistence engine (e.g., Berkeley DB Transactional Data Store, MySQL) chosen based on application needs (object size, access patterns). Most instances use BDB. Request coordination uses an event-driven (SEDA-like) model with Java NIO, where each client request creates a state machine on the coordinator node. 
+
+**Read repair** is performed opportunistically: if a read coordinator receives stale versions from some replicas, it updates them with the latest version after responding to the client. Any of the top N nodes in a preference list can coordinate a write to distribute load and improve read-your-writes consistency by choosing the node that replied fastest to a previous read.
+
+### Experiences & Lessons Learned (Section 6)
+Dynamo instances are configured with specific N (number of replicas, typically 3), R (read quorum), and W (write quorum) values, often (3,2,2), to meet application SLAs for performance, availability, and durability.
+* **Usage Patterns:** Business logic specific reconciliation (client merges versions, e.g., shopping cart), timestamp-based reconciliation ("last write wins," e.g., session data), and as a high-performance read engine (R=1, W=N, e.g., product catalog cache).
+* **Performance vs. Durability:** Dynamo targets 99.9% R/W within 300ms. Write latencies are higher than reads. An optimization using an in-memory write buffer can significantly lower 99.9th percentile latencies but trades some durability (server crash can lose buffered writes). This risk is mitigated by having one replica perform a "durable write" while the coordinator only waits for W responses.
+* **Load Distribution:** Consistent hashing aims for uniform load. The paper discusses three partitioning strategies. Strategy 3 (Q/S tokens per node, equal-sized partitions) achieved the best load balancing efficiency and reduced metadata size compared to the initial strategy (T random tokens per node, partition by token value) because it decouples partitioning from placement, simplifies bootstrapping/recovery, and eases archival.
+* **Divergent Versions:** Occur rarely, mostly due to many concurrent writers (e.g., busy robots) rather than system failures.
+* **Coordination:** Client-driven coordination (client library manages R/W state machine) significantly reduces latency compared to server-driven (via load balancer) by eliminating an extra network hop.
+* **Background vs. Foreground Tasks:** An admission controller manages resource slices for background tasks (replica sync, data handoff) based on monitored foreground operation performance to prevent contention.
+* **Overall:** Dynamo provided high availability (99.9995% successful responses). Exposing consistency and reconciliation logic to developers was manageable as many Amazon apps were already designed for inconsistencies. The full membership model (gossiping full routing tables) scales to hundreds of nodes; larger scales might need hierarchical extensions.
+
+### Conclusions (Section 7)
+Dynamo successfully combines decentralized techniques to provide a highly available and scalable key-value store, demonstrating that an eventually-consistent system can be a robust building block for demanding applications. It allows service owners to tune parameters (N,R,W) to meet specific SLAs.
 
 ---
 
