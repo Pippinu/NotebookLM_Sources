@@ -180,7 +180,7 @@ Basic Paxos protocol is based on several assumption about the processor and the 
 
 ---
 
-## Google File System (GFS) 
+## Google File System (GFS) (PAPER DA VEDERE)
 
 A **distributed file system** designed to provide petabytes of storage using thousands of storage systems built from inexpensive commodity components.
 * **Example**: Standard cheap and inexpensive HDD as opposed to expensive and high-end storage hardware. 
@@ -242,7 +242,7 @@ Above characteristic led to following design decisions:
     6.  Secondaries apply the mutation in the same order and acknowledge completion to the primary.
     7.  The primary replies to the client after receiving ACKs from all secondaries (or on error).
 
-## Hadoop
+## Hadoop (PAPER ANCORA DA VEDERE)
 An Apache Hadoop core component (along with **MapReduce** and YARN) designed to support distributed applications processing extremely large datasets (Big Data applications) based on MapReduce programming model.
 
 Open-source framework for distributed storage and processing based on MapReduce programming model.
@@ -579,28 +579,79 @@ Dynamo successfully combines decentralized techniques to provide a highly availa
 
 
 ## Amazon S3 (Simple Storage Service)
-* **Storage Model:** Data is stored as named **"objects"** which are grouped into named **"buckets"**. It can be conceptualized as a map: `bucket_name + object_key + version_id -> object_data`.
+### Storage Model:
+Data is stored as named **"objects"** which are grouped into named **"buckets"**. It can be conceptualized as a map: `bucket_name + object_key + version_id -> object_data`.
+
 * **Buckets:**
-    * Bucket names are globally unique, 105].
-    * Users can create up to 100 buckets by default].
-    * Must be explicitly created via API before use].
-    * Can be listed and deleted via API]. Access Control Lists (ACLs) control read/write permissions].
+    * Bucket names are **globally unique**.
+    * Users can create **up to 100 buckets** by default.
+    * Can be create, listed and deleted via API. 
+    * **Access Control Lists** (ACLs) control read/write permissions.
 * **Objects:**
-    * Can store any sequence of bytes, from 1 byte up to 5TB].
-    * The **object key** (or key name) is unique within a bucket and serves as the identifier]. It can be thought of as a URI path name].
-    * Objects are stored and retrieved in their entirety or by specific byte ranges using PUT and GET operations respectively].
-* **Failure/Error Handling]:**
-    * Applications using S3 must be designed to handle read/write failures and errors, typically by retrying requests].
-    * S3 returns an **ETag** (which is the MD5 checksum of the object) with write acknowledgments and read responses. Clients should compute the MD5 of objects they write and compare it with the ETag to ensure data integrity against corruption during transmission or storage, 107, 108]. If a mismatch occurs, the operation should be retried.
-* **Data Consistency Model for Objects]:**
-    * **Strong read-after-write consistency** for PUTs of new objects and for PUT requests that overwrite existing objects, as well as for DELETE requests]. This means after a successful write or delete, any subsequent read request will immediately receive the new version or see the object as deleted.
-    * Updates to a single key are **atomic**]. If two threads concurrently PUT and GET the same key, the GET will return either the old data or the new data, but never partial or corrupt data].
-    * A PUT request returns successfully after all replicas are updated].
-    * Strong consistency also applies to read operations on access control lists (ACLs), Object Tags, and object metadata].
-* **Concurrency and Locking]:**
-    * Amazon S3 **does not support object locking** for concurrent writers].
-    * If two PUT requests are made simultaneously to the same key, the request with the **latest timestamp wins** (last-writer-wins semantics), 111]. Applications needing stricter concurrency control must implement their own locking mechanisms].
-    * Updates are key-based; there is no way to make atomic updates across multiple keys unless built into the client application, 113, 114].
-* **Data Consistency Model for Buckets]:**
-    * Bucket configurations (e.g., listing buckets after deletion, enabling versioning) exhibit an **eventual consistency model**]. Changes might take a short time to fully propagate across the system, 116]. A 15-minute waiting period is sometimes suggested before performing object operations after certain bucket configuration changes].
-* **Concurrent Application Behavior Examples, 118, 119]:** The slides illustrate scenarios with concurrent writes, emphasizing the last-writer-wins semantics and the unpredictability of the order in which S3 receives requests or applications receive acknowledgments. The best way to determine the final value after concurrent writes is to perform a read after both writes have been acknowledged].
+    * Can store any sequence of bytes, from 1 byte up to 5TB.
+    * The **object key** (or key name) is unique identifier in a bucket. It can be thought of as a URI path name.
+    * Objects are stored and retrieved (GET/PUT) in their **entirety** or by **specific byte** ranges.
+### Failure/Error Handling:
+Applications using S3 must be designed to handle read/write failures and errors, typically by retrying requests.
+
+S3 returns an **ETag** (which is the MD5 checksum of the object) with write acknowledgments and read responses. 
+
+* **Write Failure**: Clients should compute the MD5 of objects they write and compare it with the ETag to ensure data integrity against corruption during transmission or storage. 
+    * If a mismatch occurs, the operation should be **retried until succeed**.
+* **Read Failure**: Successful read op. return the object requested along with MD5 stored in ETag. Client application (optional) can compute MD5 for comparison.
+    * If mismatch is detected, client should retry request.
+### Data Consistency Model for Objects:
+* **Strong read-after-write consistency** for:
+    * PUTs of new objects
+    * PUT requests that overwrite existing objects
+    * DELETE requests.   
+This means after a successful write or delete, any subsequent read request will immediately receive the new version or see the object as deleted.
+* Updates to a single key are **atomic**. If two threads concurrently PUT and GET the same key, the GET will return either the old data or the new data, but never partial or corrupt data.
+* A PUT request returns successfully after **all replicas are updated**.
+* **Strong consistency** also applies to **read operations** on ACLs, Object Tags, and object metadata.
+* **Concurrency and Locking:**
+    * Amazon S3 **does not support object locking** for concurrent writers.
+        * If two PUT requests are made simultaneously to the same key, the request with the **latest timestamp wins** (last-writer-wins semantics). Applications needing stricter concurrency control must implement their own locking mechanisms.
+    * **Updates are key-based**; there is no way to make atomic updates across multiple keys unless built into the client application.
+### Data Consistency Model for Buckets:
+* Bucket configurations (e.g., listing buckets after deletion, enabling versioning) exhibit an **eventual consistency model**. 
+    * Changes might take a short time to fully propagate across the system. 
+    * A 15-minute waiting period is sometimes suggested before performing object operations after certain bucket configuration changes.
+### Concurrent Application Behavior Examples:**
+
+#### **General Setup:**
+
+* **Domain = MyDomain, Item = StandardFez:** This indicates that all operations are happening on the same object "StandardFez" within the "MyDomain".
+* **Client 1 & Client 2:** Two different applications or actors are concurrently interacting with this object.
+
+#### Case 1: Non-Overlapping Writes then Reads
+
+<center><img width="50%"src="./images/case_1_s3.png"></center>
+
+In this scenario, the writes from Client 1 and Client 2 do not overlap in time. Client 1 writes first, and then Client 2 writes a different value. When each client reads after their respective write (and after the other client's write has completed), they observe the value they last wrote. This is a straightforward case where the order of operations is clear and there's no ambiguity due to concurrency.
+
+#### Case 2: Overlapping Writes, Read After Both
+
+<center><img width="50%"src="./images/case_2_s3.png"></center>
+
+* Client 1's read happens before Client 2's write is fully acknowledged or processed by the system. Therefore, Client 1 *might* read its own write ("ruby") or it *might* read the value that is in the process of being updated to "garnet," leading to the observation of "color = ruby or color = garnet." 
+    * The exact timing and system internals determine what Client 1 sees in this race condition.
+* Client 2's read happens after its own write has completed and after Client 1's write has likely been overwritten. Thus, Client 2 consistently reads "color = garnet."
+
+#### Case 3 (Image 3): Overlapping Writes, Reads After Both
+
+<center><img width="50%"src="./images/case_3_s3.png"></center>
+
+Writes from Client 1 and Client 2 overlap. Client 2's write starts while Client 1's write is still in progress or has just completed. 
+
+Due to "**last-writer-wins**," the value written by Client 2 ("color = brick") will be the final value.
+
+* The exact timing and system internals determine what Client 1 sees in this race condition, so, best way to determine the final value is to perform a read after both writes have been acknowledged
+
+#### Key Takeaways from Case 3:
+
+* **Last-Writer-Wins:** This is the crucial consistency model being demonstrated. The write that is received and processed last by the system determines the final value.
+* **Unpredictable Order:** The order in which S3 receives requests and the order in which applications receive acknowledgments are not guaranteed to be the same as the order in which the writes were initiated by the clients. This highlights the challenges of concurrent systems.
+* **Read After Both Writes:** The most reliable way to determine the final value in a concurrent write scenario is to perform a read *after* both write operations have been acknowledged by the system. This gives the "last-writer-wins" mechanism time to take effect and for the final state to be observable.
+
+These scenarios effectively illustrate the complexities of concurrent operations in a distributed system with "last-writer-wins" consistency. They highlight the potential for intermediate or inconsistent reads and emphasize the importance of understanding the system's consistency model when designing concurrent applications.
