@@ -270,114 +270,131 @@ Okay, we've covered the Sampling Property, which is a critical link between cont
 
 ## From Continuous-Time SP to Discrete-Time SP
 
-* **Recap:** The slides reiterate that classical signal processing theory is often developed in continuous-time, but practical processing is typically performed by computers on **discrete-time signals**.
-* **Origin of Discrete Data:** Data can be inherently discrete, or it can be obtained by discretizing a continuous-time signal $x(t)$. This discretization usually involves **sampling**, i.e., observing $x(t)$ at specific time instants $nT$ to get $x[n] = x(nT)$.
-* **The Question:** The key question posed is: How can we extend Fourier analysis (which we've been discussing for continuous-time signals) to **discrete-time signals**?
+**QUESTION:** The key question posed is: How can we extend Fourier analysis (which we've been discussing for continuous-time signals) to **discrete-time signals**?
 
-This sets the stage for introducing the **Discrete Fourier Transform (DFT)**, which is the primary tool for spectral analysis of finite-length discrete-time signals.
+**ANSWER**: This sets the stage for introducing the **Discrete Fourier Transform (DFT)**, which is the primary tool for spectral analysis of **finite-length discrete-time signals**.
 
 To do this, we first need to define an appropriate set of basis functions for discrete-time signals, analogous to the complex exponentials $e^{j2\pi ft}$ used in the continuous FT.
 
 ### Discrete Fourier Basis
 
 * For a finite-length discrete-time signal of $N$ points, the **discrete Fourier basis functions** are given by complex exponentials:
-    $$w_k[n] = e^{j\frac{2\pi}{N}kn}$$
+
+    $$
+    \large w_k[n] = e^{j\frac{2\pi}{N}kn} = \cos\left(\frac{2\pi}{N}kn\right) + j\sin\left(\frac{2\pi}{N}kn\right)
+    $$
+
     where both $n$ (the time-domain index) and $k$ (the frequency-domain index) range from $0, ..., N-1$.
 
 * **Vector Representation:** Each basis function $w_k[n]$ for a fixed $k$ can be thought of as a vector of $N$ complex values:
-    $$w_k = \begin{bmatrix} 1 & e^{j\frac{2\pi}{N}k} & e^{j\frac{2\pi}{N}2k} & \cdots & e^{j\frac{2\pi}{N}(N-1)k} \end{bmatrix}^T \in \mathbb{C}^N$$
+    $$
+    \Large w_k = \begin{bmatrix} 1 & e^{j\frac{2\pi}{N}k} & e^{j\frac{2\pi}{N}2k} & \cdots & e^{j\frac{2\pi}{N}(N-1)k} \end{bmatrix}^T \in \mathbb{C}^N
+    $$
     There are $N$ such basis vectors, for $k=0, ..., N-1$.
 
 * **Orthogonality:** These $N$ basis vectors are **orthogonal** to each other. The inner product $(w_k, w_l)$ is:
-    $$(w_k, w_l) = \sum_{n=0}^{N-1} (w_k[n])^* w_l[n] = \sum_{n=0}^{N-1} e^{-j\frac{2\pi}{N}kn} e^{j\frac{2\pi}{N}ln} = \sum_{n=0}^{N-1} e^{j\frac{2\pi}{N}(l-k)n}$$
+    $$
+    \large(w_k, w_l) = \sum_{n=0}^{N-1} (w_k[n])^* w_l[n] = \sum_{n=0}^{N-1} e^{-j\frac{2\pi}{N}kn} e^{j\frac{2\pi}{N}ln} = \sum_{n=0}^{N-1} e^{j\frac{2\pi}{N}(l-k)n}
+    $$
     This sum equals:
     * $N$, if $k=l$ (so $||w_k||^2 = N$)
     * $0$, if $k \ne l$
 
-    This orthogonality is crucial, as it allows us to easily find the coefficients when we expand a signal in this basis.
+    This orthogonality is crucial, as it **allows us to easily find the coefficients** when we expand a signal in this basis.
 
-Next image shows examples of these discrete Fourier basis functions (their real and imaginary parts) for $N=32$ and different values of $k$. You can see they represent discrete-time sinusoids of different frequencies.
+Next image shows examples of these discrete Fourier basis functions (their real and imaginary parts) for $N=32$ and different values of $k$. 
+
+They **represent discrete-time sinusoids of different frequencies**.
 
 ![alt text](./images/discrete_fourier_basis.png)
 
-### Discrete Fourier Transform (DFT)
+## Discrete Fourier Transform (DFT)
 
-The DFT transforms a finite-length discrete-time signal (which we can think of as living in the time domain) into an alternative representation of the same length, but in the discrete frequency domain.
+The DFT transforms a finite-length discrete-time signal (time domain) into an alternative representation of the same length (discrete frequency domain).
 
 * **Discrete Fourier Transform (Analysis Formula):**
     This formula calculates the DFT coefficients $X[k]$ from the discrete-time signal $x[n]$ (which has $N$ samples, $n=0, ..., N-1$).
-    $$X[k] = (w_k, x)^* = \sum_{n=0}^{N-1} x[n] (w_k[n])^* = \sum_{n=0}^{N-1} x[n]e^{-j\frac{2\pi}{N}kn}$$
-    for $k = 0, ..., N-1$.
-    * **Interpretation:** Each DFT coefficient $X[k]$ is calculated by taking the inner product of the signal $x[n]$ with the conjugate of the $k^{th}$ discrete Fourier basis vector $w_k[n]$. (Note: The slide has $(w_k,x)$ which usually implies $w_k^* x$. The formula shown is $x[n] (e^{j\frac{2\pi}{N}kn})^* = x[n]e^{-j\frac{2\pi}{N}kn}$, which is the standard definition for the DFT analysis equation).
+    $$\Large X[k] = (w_k, x)^* = \sum_{n=0}^{N-1} x[n] (w_k[n])^* = \sum_{n=0}^{N-1} x[n]e^{-j\frac{2\pi}{N}kn}$$
+    $$\large k = 0, ..., N-1$$
+    * **Interpretation:** Each DFT coefficient $X[k]$ is calculated by taking the inner product of the signal $x[n]$ with the conjugate of the $k^{th}$ discrete Fourier basis vector $w_k[n]$. 
+        * *Note*: The slide has $(w_k,x)$ which usually implies $w_k^* x$. The formula shown is $x[n] (e^{j\frac{2\pi}{N}kn})^* = x[n]e^{-j\frac{2\pi}{N}kn}$, which is the standard definition for the DFT analysis equation).
     * $X[k]$ represents the amplitude and phase of the $k^{th}$ discrete frequency component present in the signal $x[n]$.
 
 * **Inverse Discrete Fourier Transform (IDFT) (Synthesis Formula):**
     This formula reconstructs the original discrete-time signal $x[n]$ from its DFT coefficients $X[k]$.
     $$x[n] = \frac{1}{N}\sum_{k=0}^{N-1} X[k]w_k[n] = \frac{1}{N}\sum_{k=0}^{N-1} X[k]e^{j\frac{2\pi}{N}kn}$$
     for $n = 0, ..., N-1$.
-    * **Interpretation:** The signal $x[n]$ is synthesized by summing up all the discrete Fourier basis functions $w_k[n]$, each weighted by its corresponding DFT coefficient $X[k]$ and then scaled by $1/N$. The $1/N$ scaling factor is necessary because the basis vectors $w_k[n]$ are orthogonal but not orthonormal (their squared norm is $N$, not 1).
+    * **Interpretation:** The signal $x[n]$ is synthesized by summing up all the discrete Fourier basis functions $w_k[n]$, each weighted by its corresponding DFT coefficient $X[k]$ and then scaled by $1/N$. 
+    
+        The **$1/N$ scaling factor** is necessary because the basis vectors $w_k[n]$ are orthogonal but **not orthonormal** (their squared norm is $N$, not 1).
 
 **Key Points:**
 * The DFT takes an $N$-point time-domain sequence $x[n]$ and produces an $N$-point frequency-domain sequence $X[k]$.
-* $X[k]$ is often called the **spectrum** of the discrete-time signal $x[n]$.
+* $X[k]$ is called the **spectrum** of the discrete-time signal $x[n]$.
 * The DFT is fundamental for performing spectral analysis on digital computers.
 
-#### Discrete Fourier Transform in Matrix Form
+### Discrete Fourier Transform in Matrix Form
 
-The DFT operation can be expressed concisely using matrix multiplication.
+The DFT operation can be expressed concisely using **matrix multiplication**:
 
 * **DFT Matrix (W):**
-    Let $W$ be an $N \times N$ matrix whose columns are the **discrete Fourier basis vectors** $w_k$.
+    Let $W$ be an $N \times N$ matrix whose columns are the **discrete Fourier basis vectors** $\large w_k$.
+    
     However, the standard DFT matrix (often denoted as $W$ or $F_N$) is usually defined such that its $(k,n)^{th}$ element is $W_{kn} = e^{-j\frac{2\pi}{N}kn}$ (for the analysis/forward DFT) or $e^{j\frac{2\pi}{N}kn}$ (for the synthesis/inverse DFT, sometimes with a $1/N$ factor).
 
-    Let's clarify based on the slide's notation:
-    The slide says: "Let $W=[w_{1}w_{2}...w_{N-1}]\in\mathbb{C}^{N\times N}$ be the matrix collecting the Fourier basis vectors in its columns".
-    Recall $w_k[n] = e^{j\frac{2\pi}{N}kn}$. So, the $k^{th}$ column of this $W$ matrix (if $k$ is column index) would be the vector $w_k$.
+    Let's clarify based on the **slide's notation**:
+
+    * The slide says: 
+        * "Let $\large \mathbf{W}=[w_{1}w_{2}...w_{N-1}]\in\mathbb{C}^{N\times N}$ be the matrix collecting the Fourier basis vectors in its columns".
+    * Recall $\large w_k[n] = e^{j\frac{2\pi}{N}kn}$. So, the $k^{th}$ column of this $W$ matrix (if $k$ is column index) would be the vector $w_k$.
 
 * **Matrix Form of DFT (Analysis):**
-    The DFT coefficients $X[k]$ are given by $X[k] = \sum_{n=0}^{N-1} x[n]e^{-j\frac{2\pi}{N}kn}$.
-    If we define a DFT matrix $F$ (let's use $F$ to avoid confusion with the slide's $W$) such that $F_{kn} = e^{-j\frac{2\pi}{N}kn}$, then the vector of DFT coefficients $X = [X[0], ..., X[N-1]]^T$ can be obtained by multiplying this matrix $F$ with the input signal vector $x = [x[0], ..., x[N-1]]^T$:
-    $$X = Fx$$
-
-    The slide uses a slightly different formulation: $\hat{x} = W^H x$, where $\hat{x}$ is the vector of DFT coefficients $X[k]$, and $W$ is the matrix whose columns are $w_k$ (the basis vectors $e^{j\frac{2\pi}{N}kn}$).
-    The Hermitian transpose $W^H$ would have rows that are $w_k^H$. The $(k,n)^{th}$ element of $W^H$ would be $(w_k[n])^* = e^{-j\frac{2\pi}{N}kn}$.
-    So, if $W$ is the matrix with columns $w_k$, then $W^H$ is indeed the standard DFT analysis matrix $F$ mentioned above.
-    Thus, the slide's notation $\hat{x} = W^H x$ is correct for the analysis formula.
+    The DFT coefficients $X[k]$ (forming a vector $\hat{\mathbf{x}}$) can be obtained from the input signal vector $\mathbf{x}$ using matrix multiplication.
+    The slide uses the formulation:
+    $$\Large \hat{\mathbf{x}} = \mathbf{W}^H \mathbf{x}$$
+    Where:
+    * $\Large \hat{\mathbf{x}}$ is the column vector of DFT coefficients $X[k]$.
+    * $\Large \mathbf{x}$ is the column vector of the time-domain signal samples $x[n]$.
+    * $\large \mathbf{W}$ is the $N \times N$ matrix whose columns are the discrete Fourier basis vectors $w_k$ (where the $n^{th}$ element of column $k$ is $w_k[n] = e^{j\frac{2\pi}{N}kn}$). 
+    * $\large \mathbf{W}^H$ is the Hermitian transpose (conjugate transpose) of $\mathbf{W}$. 
+        * The $(k,n)^{th}$ element of $\mathbf{W}^H$ is $(w_k[n])^* = e^{-j\frac{2\pi}{N}kn}$.
+        * This matrix $\mathbf{W}^H$ is the **DFT analysis matrix**. 
+        * When it multiplies $\mathbf{x}$, it performs the summations $\sum_{n=0}^{N-1} x[n]e^{-j\frac{2\pi}{N}kn}$ to give each $X[k]$. 
 
 * **Matrix Form of IDFT (Synthesis):**
-    The IDFT is $x[n] = \frac{1}{N}\sum_{k=0}^{N-1} X[k]e^{j\frac{2\pi}{N}kn}$.
-    This can be written as $x = \frac{1}{N} W \hat{x}$, where $W$ is the matrix whose $(n,k)^{th}$ element is $e^{j\frac{2\pi}{N}nk}$ (i.e., its columns are the basis vectors $w_k$). This matches the slide.
+    The IDFT is $\large x[n] = \frac{1}{N}\sum_{k=0}^{N-1} X[k]e^{j\frac{2\pi}{N}kn}$.
+    
+    Matrix form can be written as:
+    
+    $$
+    \Large \mathbf{x} = \frac{1}{N} \mathbf{W} \hat{\mathbf{x}}
+    $$
+     
+    where $W$ is the matrix whose $(n,k)^{th}$ element is $e^{j\frac{2\pi}{N}nk}$ (i.e., its columns are the basis vectors $w_k$). This matches the slide.
 
 **Significance of Matrix Form:**
 * It provides a compact way to represent the DFT and IDFT.
-* It highlights that the DFT is a linear transformation.
+* It highlights that the DFT is a **linear transformation**.
 * It's useful for theoretical analysis and for understanding the computational complexity.
 
-#### The Fast Fourier Transform (FFT)
+### The Fast Fourier Transform (FFT)
 
-* **What is FFT?**
-    The Fast Fourier Transform (FFT) is **not** a different type of transform from the DFT. It is simply a collection of highly **efficient algorithms** for computing the DFT (and its inverse, the IDFT).
+The Fast Fourier Transform (FFT) is **not** a different type of transform from the DFT but it is simply a collection of highly **efficient algorithms** for **computing the DFT** and its **inverse IDFT**.
 
 * **Computational Complexity:**
-    * If you compute the DFT directly using the summation formula $X[k] = \sum x[n]e^{-j\frac{2\pi}{N}kn}$ for each of the $N$ values of $X[k]$, each summation involves $N$ complex multiplications and $N-1$ complex additions. Doing this for all $N$ coefficients results in a complexity on the order of $N^2$ operations (denoted as $O(N^2)$).
-    * The FFT algorithms cleverly exploit the symmetries and periodicities of the complex exponential terms $e^{-j\frac{2\pi}{N}kn}$ (the "twiddle factors") to reduce the number of redundant calculations.
-    * FFT algorithms reduce the computational complexity to be on the order of $N \log N$ operations (denoted as $O(N \log N)$).
+    * If you compute the DFT directly using the summation formula $X[k] = \sum x[n]e^{-j\frac{2\pi}{N}kn}$ for each of the $N$ values of $X[k]$, each summation involves $N$ complex multiplications and $N-1$ complex additions. 
+    
+        Doing this for all $N$ coefficients results in a complexity on the order of $\large O(N^2)$ operations.
+    * The FFT algorithms cleverly **exploit the symmetries and periodicities** of the complex exponential terms $\Large e^{-j\frac{2\pi}{N}kn}$ (the "twiddle factors" [*Fattori di manipolazione*]) to reduce the number of redundant calculations.
+    * **FFT algorithms reduce the complexity** to be on the order of $\large O(N \log N)$ operations.
 
-* **Impact of FFT:**
-    * This reduction in complexity from $O(N^2)$ to $O(N \log N)$ is **enormous** for large values of $N$. For example, if $N=1024$:
-        * $N^2 \approx 1 \text{ million}$
-        * $N \log_2 N = 1024 \times 10 = 10240 \approx 10 \text{ thousand}$
-        This is a speed-up factor of about 100. For larger $N$, the speed-up is even more dramatic.
-    * The development of FFT algorithms in the 1960s (notably the Cooley-Tukey algorithm) revolutionized digital signal processing, making it practical to perform Fourier analysis on digital computers for a wide range of applications.
+* **Efficiency for Powers of 2:** FFT algorithms are particularly efficient when the length of the data sequence $N$ is a **power of 2** (given the "divide-and-conquer" strategy of the algoritm). If $N$ is not a power of 2, techniques like zero-padding are often used, or more general FFT algorithms for composite numbers are employed.
 
-* **Efficiency for Powers of 2:**
-    FFT algorithms are particularly efficient when the length of the data sequence $N$ is a power of 2 (e.g., 256, 512, 1024, 2048). Many FFT implementations are optimized for these lengths. If $N$ is not a power of 2, techniques like zero-padding (adding zeros to the signal to make its length a power of 2) are often used, or more general FFT algorithms for composite numbers are employed.
+In summary:
+* **Matrix form** provides a theoretical view of the DFT as a **linear transformation**.
+* **FFT** provides the practical, computationally **feasible means** to calculate it.
 
-In summary, the matrix form provides a theoretical view of the DFT as a linear transformation, while the FFT provides the practical, computationally feasible means to calculate it.
-
-#### Relation between FT and DFT
-
-This is a crucial conceptual bridge. The DFT is what we compute in practice on digital computers, but it's an approximation or a specific representation related to the continuous-time FT of an underlying analog signal.
+### Relation between FT and DFT (RIGUARDARE, forse sbagliata la spiegazione, forse sbagliate le consegne che indicano i disegni)
 
 ![alt text](./images/FT_DFT_comparison.png)
 
