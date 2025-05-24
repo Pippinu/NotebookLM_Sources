@@ -399,53 +399,432 @@ In summary:
 ![alt text](./images/FT_DFT_comparison.png)
 
 1.  **Top-Left: Fourier Transform of a continuous function $s(t)$**
-    * This shows a continuous-time signal $s(t)$ (not explicitly drawn, but implied) and its continuous-time Fourier Transform $S(f)$. $S(f)$ is a continuous function of frequency, typically shown as a smooth curve (e.g., a Gaussian-like shape in the diagram).
-    * This is the ideal, continuous-world scenario: $s(t) \leftrightarrow S(f)$.
+    * Continuous-time Fourier Transform $S(f)$ of $s(t)$. $S(f)$ is a continuous function of frequency, typically shown as a smooth curve (e.g., a Gaussian-like shape in the diagram).
+        * This is the ideal, continuous-world scenario: $s(t) \leftrightarrow S(f)$.
 
 2.  **Top-Right: Transform of the periodic summation of $s(t)$ (aka "Fourier Series Coefficients")**
-    * This considers a signal formed by taking $s(t)$ and making it periodic with some period $P$. Let's call this periodic signal $s_P(t) = \sum_k s(t-kP)$.
+    * This considers a signal formed by taking $s(t)$ and making it periodic with some period $P$, periodic signal is $s_P(t) = \sum_k s(t-kP)$.
     * As we learned from the **Periodization Property**, the spectrum of such a periodic signal becomes discrete. It consists of impulses (or spectral lines) at frequencies $k/P$ (harmonics of $1/P$).
     * The amplitudes of these impulses are proportional to $S(k/P)$ – samples of the original continuous spectrum $S(f)$ taken at the harmonic frequencies.
     * This is essentially what the **Fourier Series** gives you: a set of discrete coefficients representing a periodic continuous-time signal. The diagram labels this $S(k)$.
 
 3.  **Bottom-Left: Transform of periodically sampled $s(t)$ (aka "Discrete-Time Fourier Transform" - DTFT)**
-    * This considers taking the original continuous-time signal $s(t)$ and sampling it in the time domain with a sampling period $T$ (sampling frequency $F_s = 1/T$). Let the sampled signal be $s_{sampled}(t) = \sum_n s(nT)\delta(t-nT)$.
-    * As we learned from the **Sampling Property**, the spectrum of this sampled signal, $S_{1/T}(f)$ (the slide uses this notation), becomes a periodic replication of the original spectrum $S(f)$. Replicas of $S(f)$ are centered at multiples of the sampling frequency $F_s = 1/T$.
-    * This $S_{1/T}(f)$ is a continuous but periodic function of frequency. This is the **Discrete-Time Fourier Transform (DTFT)** of the sequence of samples $s[n]=s(nT)$.
+    * This considers taking the original continuous-time signal $s(t)$ and sampling it in the time domain with a sampling period $T$ (sampling frequency $F_s = 1/T$). 
+    
+        Let the sampled signal be $s_{sampled}(t) = \sum_n s(nT)\delta(t-nT)$.
+    * As we learned from the **Sampling Property**, the **spectrum of sampled signal**, $S_{1/T}(f)$ (the slide uses this notation), becomes a **periodic replication of the original spectrum** $S(f)$. 
+    
+        Replicas of $S(f)$ are centered at multiples of the sampling frequency $F_s = 1/T$.
+    * This $S_{1/T}(f)$ is a continuous but periodic function of frequency. 
+    
+        This is the **Discrete-Time Fourier Transform (DTFT)** of the sequence of samples $s[n]=s(nT)$.
 
 4.  **Bottom-Right: Transform of both periodic sampling and periodic summation (aka "Discrete Fourier Transform" - DFT)**
-    * This is where the DFT comes in. The DFT operates on a **finite number of samples** $s[n]$ (say, $N$ samples).
-    * Effectively, the DFT can be understood as the result of performing both operations:
+    * This is where the DFT comes in. The DFT operates on a **finite number of samples**, $s[n]$ (say, $N$ samples, for $n=0, ..., N-1$). 
+        * **IMPORTANT**\
+        Crucially, when you compute the N-point DFT of an N-point sequence $s[n]$, the DFT inherently **treats this finite $N$-point sequence as one period of an infinitely periodic discrete sequence**, this imply, also, the discretization of the spectrum.
+
+            * **WHERE DOES PERIODICITY COME FROM**?\
+                **DFT Basis function** $\Large e^{j\frac{2\pi}{N}kn}$, which are periodic with a period $N$ in the time index $n$. When you express a finite N-point sequence ($s[n]$ in this case) as a sum of N-periodic basis functions (which is what IDFT does), the sum itself will also be N-periodic. (CHECK)
+
+    * Effectively, the DFT can be understood as the result of performing **both operations**:
         * **Sampling in time:** This makes the spectrum periodic (as in step 3).
-        * **Windowing/Assuming periodicity in time:** When we take $N$ samples for the DFT, we are implicitly dealing with a signal that is either finite in duration or is assumed to be one period of an $N$-point periodic sequence. Making a signal periodic in the time domain (with period $N T_s$, where $T_s$ is the sampling interval) makes its spectrum discrete (sampled in frequency, as in step 2).
+        * **Windowing/Assuming periodicity in time:** When we take $N$ samples for the DFT, we are implicitly dealing with a signal that is either finite in duration or is **assumed** to be **one period of an $N$-point periodic sequence**. 
+        
+            Making a signal periodic in the time domain (with period $N T_s$, where $T_s$ is the sampling interval) makes its spectrum discrete (sampled in frequency, as in step 2).
+
     * So, the DFT $S_N(k)$ (as labeled in the diagram) is a **discrete and periodic representation in the frequency domain**. It consists of $N$ discrete frequency samples.
     * The diagram shows these $N$ samples $S_N(k)$ as essentially samples of one period of the periodic spectrum $S_{1/T}(f)$ from step 3.
     * The slide's caption: "The DFT is a discrete version (i.e. samples) of the periodization of the continuous-time signal spectrum, where samples are collected over a single period."
         * This means: Take $S(f)$ (from step 1). Periodize it due to time sampling (step 3, giving $S_{1/T}(f)$). Then, sample this periodic spectrum $S_{1/T}(f)$ to get the DFT coefficients $S_N(k)$.
 
-**In essence:**
+**In essence**
+
 The DFT $X[k]$ of a sequence of $N$ samples $x[n]$ can be thought of as $N$ samples of one period of the DTFT $X(e^{j\omega})$ of that sequence. And the DTFT $X(e^{j\omega})$ is, in turn, a scaled and periodic version of the continuous-time Fourier Transform $X_c(f)$ of an underlying analog signal from which $x[n]$ was derived, assuming proper sampling.
 
 This diagram is a very concise way to show how these different Fourier representations relate to each other through operations of sampling and periodization in both domains.
 
-#### Properties of the Discrete Fourier Transform (DFT)
+### Remark on DTFT vs. DFT
 
-These properties are analogous to those of the continuous-time FT but are adapted for finite-length discrete sequences.
+**1. Discrete-Time Fourier Transform (DTFT)**
+
+* **Input Signal $x[n]$:**
+    * Applies to a discrete-time sequence $x[n]$ of **infinite length** 
+        * The sequence can also be finite length but padded with zeros, so also infinite.
+* **Frequency Domain Representation $X(e^{j\omega})$:**
+    * The DTFT $X(e^{j\omega})$ is a **continuous function of frequency** $\omega$ 
+        * $\omega$ is the normalized angular frequency, $\omega = 2\pi f T_s$, where $T_s$ is the sampling period.
+    * $X(e^{j\omega})$ is always **periodic with period $2\pi$** in $\omega$ (or period $F_s = 1/T_s$ if using unnormalized frequency $f$).
+* **Formula**: $$X(e^{j\omega}) = \sum_{n=-\infty}^{\infty} x[n]e^{-j\omega n}$$
+* **Computability:**
+    * Since it's a continuous function of frequency (and potentially an infinite sum if $x[n]$ is infinite), you **cannot compute** its value at *every* frequency point directly on a computer.
+* **What it represents:**
+    * It's the full spectrum of a discrete-time sequence, showing how its energy or power is distributed over a continuous range of frequencies (within one period, e.g., $\omega$ from $-\pi$ to $\pi$).
+
+**2. Discrete Fourier Transform (DFT)**
+
+* **Input Signal $x[n]$:**
+    * Applies to a discrete-time sequence** $x[n]$ of $N$ points, **finite length**.
+* **Frequency Domain Representation $X[k]$:**
+    * The DFT $X[k]$ is a **discrete sequence** of $N$ frequency components (for $k=0, 1, ..., N-1$).
+    * Both the input sequence $x[n]$ and its DFT $X[k]$ are implicitly treated as **periodic with period $N$**.
+* **Formula**: $$X[k] = \sum_{n=0}^{N-1} x[n]e^{-j\frac{2\pi}{N}kn}$$
+* **Computability:**
+    * The DFT is **directly computable** on a computer, especially efficiently using Fast Fourier Transform (FFT) algorithms. This is what is actually implemented in software.
+* **What it represents:**
+    * The $N$ points of the DFT $X[k]$ represent $N$ **samples of one period of the DTFT spectrum** of the $N$-point input sequence. Specifically, $X[k] = X(e^{j\omega})|_{\omega = \frac{2\pi k}{N}}$ for $k=0, ..., N-1$ (assuming $x[n]$ is zero outside $0 \le n < N$ for the DTFT, or is $N$-periodic).
+
+**Key Differences Summarized:**
+
+| Feature             | DTFT ($X(e^{j\omega})$)                                 | DFT ($X[k]$)                                                                    |
+| :------------------ | :------------------------------------------------------ | :------------------------------------------------------------------------------ |
+| **Input Signal** | Infinite or finite discrete-time sequence $x[n]$        | Finite-length ($N$-point) discrete-time sequence $x[n]$                         |
+| **Time Domain** | Aperiodic (generally)                                   | Implicitly Periodic with period $N$                                             |
+| **Frequency Domain**| Continuous function of frequency                        | Discrete sequence of $N$ frequency samples                                      |
+| **Spectrum Period** | Periodic with period $2\pi$ (for $\omega$) or $F_s$ (for $f$) | Periodic with period $N$ (for index $k$)                                         |
+| **Computability** | Theoretical tool; not directly computed in its entirety | Directly computable (efficiently via FFT)                                       |
+| **Represents** | True spectrum of a discrete-time sequence             | Samples of one period of the DTFT of the $N$-point (or $N$-periodic) sequence |
+
+### Properties of the Discrete Fourier Transform (DFT)
+
+These properties are **analogous to those of the continuous-time** FT but are **adapted** for finite-length discrete sequences.
 
 Let $x[n]$ be an $N$-point discrete-time sequence, and $X[k]$ be its $N$-point DFT.
 
 1.  **Spectrum Interpretation**:
     * The coefficients $X[k]$ (for $k=0, ..., N-1$) are referred to as the **spectrum** of the discrete-time signal $x[n]$.
-    * Each $X[k]$ shows how much oscillatory behavior at the discrete frequency $\frac{2\pi}{N}k$ (radians per sample) is contained in the signal $x[n]$. This is because $X[k]$ is derived from the inner product of $x[n]$ with the $k^{th}$ discrete Fourier basis function $e^{j\frac{2\pi}{N}kn}$.
+    * Each $X[k]$ shows **how much oscillatory behavior at the discrete frequency** $\Large \frac{2\pi}{N}k$ (radians per sample) is contained in the signal $x[n]$. 
+        * This is because $X[k]$ is derived from the inner product of $x[n]$ with the $k^{th}$ discrete Fourier basis function $e^{j\frac{2\pi}{N}kn}$.
 
 2.  **Energy Distribution**:
     * The squared magnitude $|X[k]|^2$ is a measure (up to a scale factor $N$) of the signal's **energy at the discrete frequency $\frac{2\pi}{N}k$**.
 
 3.  **Parseval's Relation for DFT**:
-    This is the discrete equivalent of Parseval's relation for the continuous FT. It states that the energy of the signal in the time domain is related to the energy in the DFT domain:
-    $$||x||^2 = \sum_{n=0}^{N-1} |x[n]|^2 = \frac{1}{N} \sum_{k=0}^{N-1} |X[k]|^2 = \frac{1}{N} ||\hat{x}||^2$$
+    Discrete equivalent version of Parseval's relation for the continuous FT. 
+    
+    It states that the energy of the signal in the time domain is related to the energy in the DFT domain:
+    $$\large ||x||^2 = \sum_{n=0}^{N-1} |x[n]|^2 = \frac{1}{N} \sum_{k=0}^{N-1} |X[k]|^2 = \frac{1}{N} ||\hat{x}||^2$$
     (where $\hat{x}$ is the vector of DFT coefficients $X[k]$).
     * **Significance**: This is a crucial energy conservation property. It shows how the total energy of the discrete-time signal $x[n]$ is distributed among its $N$ discrete frequency components $X[k]$. The $1/N$ factor arises from the definition of the DFT and IDFT (specifically, the $1/N$ in the IDFT formula).
-    * *(Recalling our earlier discussions: The energy $||x||^2 = \sum |x[n]|^2$ is calculated using squared magnitudes. Parseval's relation for DFT shows that this energy is preserved (up to the $1/N$ scaling) when we transform to the frequency domain coefficients $X[k]$. So, $\frac{1}{N}|X[k]|^2$ can be interpreted as the energy contribution from the $k^{th}$ frequency component.)*
+    * *(Recalling our earlier discussions: The energy $||x||^2 = \sum |x[n]|^2$ is calculated using squared magnitudes. Parseval's relation for DFT shows that this energy is preserved (up to the $1/N$ scaling) when we transform to the frequency domain coefficients $X[k]$. So, $\frac{1}{N}|X[k]|^2$ can be interpreted as the **energy contribution from the $k^{th}$ frequency component.**)*
 
-The slides then present several exercises (Exercises 2, 3, 4 on slides 61-63) that use the DFT to analyze signals, such as detecting periodic trends in noise, classifying whale songs, and looking at the spectrum of speech signals. These exercises highlight the practical utility of the DFT in extracting meaningful information from real-world data by examining its frequency content.
+## Spectrum Classification
+
+Analyzing the spectrum (typically the magnitude of the DFT coefficients, $|X[k]|$) allows us to understand the **fundamental frequency characteristics** of a signal and classify it.
+
+### Magnitude Spectrum
+
+**Magnitude Spectrum ($|X[k]|$)**: The magnitude of a signal's spectrum represents the **energy distribution in frequency** for that signal. 
+* For the continuous FT, it was $|X(f)|$.
+
+It's usual to broadly classify discrete-time signals into **three classes** based on **where most of their energy is concentrated in the frequency domain**:
+
+* **Lowpass Spectrum**:
+    * A signal has a lowpass spectrum if most of its energy is concentrated at **low frequencies** (frequencies close to DC or $f=0$).
+    * High-frequency components are significantly attenuated or absent.
+    * The example image shows a spectrum that is strong near the center (DC) and drops off for higher positive and negative frequencies.
+
+* **Highpass Spectrum**:
+    * A signal has a highpass spectrum if most of its energy is concentrated at **high frequencies**.
+    * Low-frequency components (including DC) are significantly attenuated or absent.
+    * The example image shows a spectrum that is weak near the center (DC) and becomes stronger for higher positive and negative frequencies (approaching the Nyquist frequency or $\pi$ in normalized frequency).
+
+* **Bandpass Spectrum**:
+    * A signal has a bandpass spectrum if most of its energy is concentrated within a **specific band of frequencies**, not around DC and not necessarily at the highest frequencies.
+    * Frequencies outside this band (both lower and higher) are attenuated.
+    * The example image shows a spectrum that is strong in a certain range away from DC, and weaker at DC and very high frequencies.
+
+Understanding these classifications is important because many signal processing operations, like filtering, are designed to selectively pass or attenuate signals based on whether they are lowpass, highpass, or bandpass in nature.
+
+![alt text](./images/band_spectrum.png)
+
+![alt text](./images/another_magnitude_spectrum.png)
+
+### Phase Spectrum
+
+While the magnitude spectrum $|X[k]|$ (or $|X(f)|$) tells us the strength or energy of each frequency component, the **phase spectrum** provides information about the **relative alignment or timing of these components**.
+
+* **Definition**: The phase of each spectrum coefficient, denoted by $\angle X[k]$ (or $\angle X(f)$ for continuous FT), represents the **relative alignment of each complex exponential basis function $e^{j\frac{2\pi}{N}kn}$ with the oscillation at the frequency $\frac{2\pi}{N}k$ contained in the signal**.
+    * In simpler terms, for each frequency component, the phase tells you its "starting point" or **shift in time relative to a reference** (e.g., relative to a pure cosine wave which has zero phase at $t=0$).
+
+* **Importance of Phase**:
+    * This alignment (the phase information) is crucial because it determines the **shape of the signal in the discrete-time domain**.
+    * Even if two different signals have the exact same magnitude spectrum (meaning they are composed of the same frequencies with the same strengths), if their **phase spectra are different**, their **time-domain waveforms will look very different**.
+
+* **Example from the Slides**:
+    * The slides present an example of a 64-periodic discrete-time signal:
+        $$\large x[n]=\sum_{i=0}^{3}\frac{1}{2i+1}\sin\left(\frac{2\pi}{64}(2i+1)n+\phi_{i}\right)$$
+    * It's highlighted that the **magnitude of the spectrum of this signal is independent of the phases $\phi_i$** of the individual sinusoidal components.
+    * Slides shows **two cases** with different sets of $\phi_i$ values:
+        * **Case 1 (slide 67):** $\phi_i = 0$ for all $i$.
+        * **Case 2 (slide 68):** $\phi_i = 2\pi i/3$ for $i=0,1,2,3$.
+    * "DFT coefficients magnitude" plot (the magnitude spectrum) is the same.
+    * "Signal in time" plot and the "DFT coefficients phase" plot (the phase spectrum), howeverm are **distinctly different**. 
+    
+        This visually demonstrates that **changing the phases** $\phi_i$ **dramatically alters the time-domain shape** of the signal, even though the energy at each frequency remains the same.
+
+    ![alt text](./images/case_1_phase_spectrum.png)
+    ![alt text](./images/case_2_phase_spectrum.png)
+
+    ![alt text](./images/another_phase_spectrum.png)
+
+**Key Takeaway:**
+Both magnitude and phase information are generally needed to fully describe a signal. 
+* **Magnitude spectrum** tells you "what frequencies are present and how strong they are" 
+* **Phase spectrum** tells you "how these frequencies are aligned or timed relative to each other," which dictates the signal's actual appearance in time. 
+    * Ignoring phase information can lead to a complete loss of the signal's original structure.
+
+## Time-Frequency Analysis
+
+* **Limitation of Global Fourier Transform:**
+    * The standard Fourier Transform (or DFT) provides a **global** representation of a signal's frequency content. It tells you *what* frequencies are present in the entire signal and their overall strength and phase.
+        * **Crucial Point**: However, it **doesn't tell you *when*** those frequencies occur.
+    * The example given is a piece of music: 
+        * A global FT can show all the notes (frequencies) played, but it loses the information about their order, duration, and timing, which constitutes the melody and rhythm.
+
+* **The Need for Time-Frequency Representation:**
+    * For many signals, especially non-stationary ones (signals whose frequency content changes over time, like speech, music, or seismic signals), we need a representation that shows how the spectral content evolves over time.
+    * The question posed is: "There exists a time-frequency representation of a signal, in which both time and frequency information are readily apparent?"
+
+This leads to the introduction of the **Spectrogram**.
+
+### The Spectrogram
+
+* **Basic Idea:** The spectrogram is the simplest and one of the most common time-frequency transformations. The core idea involves:
+    * **Splitting the signal** into small, consecutive (and possibly overlapping) segments or "chunks" of length $N$.
+    * Computing the **DFT of each chunk** independently.
+
+This process is formally known as the **Short-Time Fourier Transform** (STFT)
+
+* **Short-Time Fourier Transform (STFT):**
+    The formula for the STFT coefficients $S[k, m]$ is given as:
+    $$ \large S[k, m] = \sum_{n=0}^{N-1} x[mM + n] w[n] e^{-j\frac{2\pi}{N}nk} $$
+    
+    * $\large m$ is the **time index of the chunk** (it steps along the signal).
+    * $\large M$ is the **hop size** or **step size** between the start of consecutive chunks. 
+        * If $M < N$, the chunks overlap. 
+        * If $M=N$, they are consecutive without overlap.
+    * $\large N$ is the **length of each chunk** (and the size of the DFT computed for that chunk).
+    * $\large k$ is the **frequency index** for the DFT of that chunk.
+
+    Note: The slide formula $S\large [k, m] = \sum_{n=0}^{N-1} x[mM +n]e^{-j\frac{2\pi}{N}nk}$ **doesn't explicitly show a window function** $\large w[n]$, but **it's a crucial part of STFT**. \
+    Usually, each chunk $x[mM+n]$ is multiplied by a window function $w[n]$ before taking the DFT. \
+    This window function is typically localized in time, like a Hann or Hamming window, to reduce spectral leakage. If no window is explicitly mentioned, it implies a **rectangular window**.
+
+* **Matrix Representation:**
+    The result of the STFT, $S[k,m]$, is a **2D matrix** where:
+    * One dimension represents time (indexed by $m$) 
+    * The other dimension represents frequency (indexed by $k$).
+
+    The slide mentions: "In matrix notation we have $\large S = W_N X_{chunks}$" 
+    * This is a conceptual representation, where $W_N$ is the DFT matrix and $X_{chunks}$ represents the matrix of **windowed signal chunks**.
+    
+    The spectrogram is an $\large N \times \lfloor L/M \rfloor$ matrix, where $L$ is the total length of the signal $x[n]$.
+
+    $$ \Large
+        X_{chunks} = \begin{bmatrix}
+        x[0] & x[M] & x[2M] & \cdots & x[mM] \\
+        x[1] & x[M+1] & x[2M+1] & \cdots & x[mM+1] \\
+        \vdots & \vdots & \vdots & \ddots & \vdots \\
+        x[N-1] & x[M+N-1] & x[2M+N-1] & \cdots & x[mM+N-1]
+        \end{bmatrix}
+    $$
+
+#### What is the Spectrogram?
+
+Typically, the **spectrogram** is a visual representation of the **squared magnitude** of the STFT coefficients, i.e., $|S[k,m]|^2$. 
+
+It's often plotted as an image where:
+* The x-axis is time ($m$).
+* The y-axis is frequency ($k$).
+* The color or intensity at each point $(m,k)$ represents the **power or energy of the signal** at that **specific time and frequency**.
+
+![alt text](./images/spectrogram.png)
+![alt text](./images/another_spectrogram.png)
+
+### Time-Frequency Localization of Signals
+
+This section discusses the inherent **trade-offs of spectrogram** in trying to pinpoint signal characteristics in both time and frequency simultaneously using the STFT.
+
+* **Local Spectrum:** Each column of the STFT matrix $S[k,m]$ (where $m$ is the time chunk index and $k$ is the frequency index) represents the **local spectrum** for a time interval of length $N$ (the chunk size or window length).
+
+* **Time Resolution:**
+    * We can therefore say that the **time resolution** of the spectrogram is approximately $N$ samples. \
+    
+        This means the STFT can distinguish events in time that are separated by roughly $N$ samples. 
+        * If $N$ is small, you have good time resolution (you can see rapid changes in time).
+
+* **Frequency Resolution:**
+    * The **frequency resolution** of the spectrogram (for each $N$-point DFT) is $2\pi/N$ (in radians per sample) or $F_s/N$ (in Hz, where $F_s$ is the sampling frequency).
+
+        This means the STFT can distinguish frequency components that are separated by roughly $F_s/N$ Hz. 
+        * If $N$ is large, you have good frequency resolution (you can see fine details in frequency).
+
+* **The Trade-off (Uncertainty Principle):**
+    * Herein lies the **fundamental trade-off**:
+        * If you want to **increase frequency resolution** (see finer details in frequency), you need to make $\large N$ **larger** (use longer analysis windows). 
+            * However, doing so **degrades time resolution** (**you lose precision** in pinpointing when those frequencies occur because you're averaging over a longer time).
+        * Conversely, if you want to **achieve fine resolution in time** (see rapid changes), you need to make $\large N$ **smaller** (use shorter analysis windows). 
+            * But this means the corresponding spectral information for each "time slice" will be very coarse (**poor frequency resolution**).
+    * The slide mentions: "Choose a window where signal is constant and stable to get peak." This implies that for reliable frequency estimation within a window, the signal's properties shouldn't change much within that window.
+    * This problem is a particular instance of a general **uncertainty principle** for time-frequency analysis: 
+    
+        **You cannot simultaneously achieve arbitrarily high resolution in both the time domain and the frequency domain.**
+
+This trade-off is a critical limitation of the STFT and spectrogram. If a signal has components that are short in duration but also have a narrow frequency bandwidth, or if it has components that are very close in frequency but occur at slightly different times, the STFT with a fixed window size $N$ might struggle to represent them accurately.
+
+This limitation directly motivates the development of more advanced time-frequency analysis techniques, like **wavelets**.
+
+### Wavelets
+
+* **Motivation (Overcoming STFT Limitation):**
+    * The STFT uses a fixed window size, which means it analyzes the signal with a **fixed time and frequency resolution** across all frequencies.
+    * This is problematic for signals that have both:
+        * **Short**, **transient bursts** (which require good time resolution, i.e., short windows).
+        * **Long**, **quasi-stationary components** (which require good frequency resolution, i.e., long windows).
+    * With STFT, you can optimize for one or the other, but **not both simultaneously** for all parts of the signal.
+
+* **The Wavelet Approach (Multi-Resolution Analysis):**
+    * To overcome this, wavelets enable a **multi-resolution analysis**.
+    * The core idea is to use:
+        * **Short windows at high frequencies** (to get good time resolution for fast-changing, high-frequency events).
+        * **Long windows at low frequencies** (to get good frequency resolution for slow-changing, low-frequency events).
+    * This adaptive windowing is the key advantage of wavelet analysis over STFT.
+
+* **Defining Wavelets:**
+    * Wavelets are functions generated from a single prototype function called the **mother wavelet**, denoted as $h(t)$ (or $\psi(t)$ in much of the literature).
+    * The family of wavelets is created by **scaling** and **translating** (shifting) this mother wavelet:
+        $$\Large h_{a,\tau}(t) = \frac{1}{\sqrt{a}}h\left(\frac{t-\tau}{a}\right)$$
+        Where:
+        * $h_{a,\tau}(t)$ is a **specific wavelet** in the family.
+        * $h(t)$ is the **mother wavelet**.
+            * It's a prototype function that is well-localized in both time and frequency, and typically has an average value of zero.
+        * $a$ is the **scale factor** ($a > 0$):
+            * If $a < 1$, the wavelet is **compressed** (shorter duration) and corresponds to analyzing **high frequencies**.
+            * If $a > 1$, the wavelet is **stretched** (longer duration) and corresponds to analyzing **low frequencies**.
+
+            ![alt text](./images/scaling_wavelet.png)
+        * $\tau$ (tau) is the **translation factor** (or delay/shift)
+            * Shifts the wavelet along the time axis, allowing analysis at different time locations.
+        * The $1/\sqrt{a}$ **factor for energy normalization**.
+            * This ensure that all wavelets in the family have the same energy regardless of the scale $a$.
+
+    ![alt text](./images/wavelet_process.png)
+
+* **Choosing a Mother Wavelet:**
+    * **General principle**: Select the mother wavelet whose shape **best matches the features** or transients you expect in your signal.
+    * This is because a good match will lead to the **sparsest representation** of the signal in terms of its wavelet coefficients.
+        * The signal's features will be captured by a few large coefficients.
+    * The output of a wavelet transform is often visualized as a **scalogram** (a time-scale representation, more later), and a sparse representation here means most of the scalogram would be near zero, with **significant energy concentrated** where the **wavelet matches signal features**. 
+        * This aligns with Ockham's Razor for choosing efficient representations.
+
+    ![alt text](./images/wavelets.png)
+
+### Continuous Wavelet Transform (CWT)
+
+* **Wavelets as a Family of Basis Functions:**
+    The **collection of scaled and translated wavelets**, $\large h_{a,\tau}(t) = \frac{1}{\sqrt{a}}h\left(\frac{t-\tau}{a}\right)$, forms a family of basis functions. 
+    * Though for CWT, they are often an overcomplete set rather than a strict orthogonal basis like in some discrete wavelet transforms.
+
+* **CWT Definition (Analysis Formula):**
+    
+    The **Continuous Wavelet Transform** (**CWT**) of a signal $x(t)$ is defined as:
+    $$\Large CWT_{x}(\tau,a) = \int_{-\infty}^{\infty}x(t)h_{a,\tau}^{*}(t)dt = \frac{1}{\sqrt{a}}\int_{-\infty}^{\infty}x(t)h^{*}\left(\frac{t-\tau}{a}\right)dt$$
+    Where:
+    * $\large CWT_{x}(\tau,a)$ are the **wavelet coefficients**.
+    * $\Large \tau$ (tau) is the translation (**time shift**).
+    * $\Large a$ is the **scale** ($a > 0$).
+    * $\large h_{a,\tau}^{*}(t)$ is the **complex conjugate** of the scaled and translated mother wavelet.
+    * $\large h^{*}(\cdot)$ is the **complex conjugate** of the mother wavelet $h(\cdot)$.
+
+* **Interpretation:**
+    The CWT coefficient $CWT_{x}(\tau,a)$ represents an **inner product** between the signal $x(t)$ and the wavelet basis function $h_{a,\tau}(t)$ (specifically, its conjugate) characterized by the scale $a$ and translation $\tau$.
+    * It measures the **similarity** or correlation between the signal and the wavelet at that specific scale $a$ and time location $\tau$.
+    * A **large magnitude** for $CWT_{x}(\tau,a)$ indicates that the signal $x(t)$ has a feature around time $\tau$ that **strongly matches the shape of the wavelet** at scale $a$.
+
+* **Inverse CWT (Synthesis Formula):**
+    The original signal $x(t)$ can be **reconstructed from its wavelet coefficients** using the inverse CWT:
+    * Though this often requires specific conditions on the mother wavelet, known as admissibility conditions
+
+    $$\Large x(t) = c \int_{a>0}\int_{-\infty}^{\infty}CWT_{x}(\tau,a)h_{a,\tau}(t)\frac{dad\tau}{a^{2}}$$
+
+    *Note*:
+    * The slide has $h_{a,\tau}^{*}(t)$ in the synthesis integral. Standard synthesis often uses $h_{a,\tau}(t)$ or a related "synthesis wavelet." 
+    * The constant $c$ depends on the mother wavelet used.
+* **Interpretation:** The signal $x(t)$ is reconstructed by summing (integrating) all the wavelet basis functions $h_{a,\tau}(t)$, each weighted by its corresponding CWT coefficient $CWT_{x}(\tau,a)$, with an additional $1/a^2$ weighting factor in the integral.
+
+The CWT provides a **two-dimensional representation** (time $\tau$ and scale $a$) of a one-dimensional signal $x(t)$, showing how the signal's components vary across different scales (frequencies) and time locations.
+
+The **scalogram** is a specific visualization or quantity derived from the CWT, representing the energy or power of the signal in the time-scale plane. 
+* It's typically what you plot as an image to see the time-frequency (or time-scale) behavior.
+
+### The Scalogram
+
+* **Definition**: The squared modulus of the CWT coefficients, i.e., $\large |CWT_{x}(\tau,a)|^{2}$, is called the **scalogram**.
+
+* **Energy Preservation**:
+    * The slide mentions that the CWT (when defined appropriately, often implying an admissible mother wavelet) behaves like an orthonormal basis decomposition in terms of energy preservation.
+    * The total energy of the signal $E_x$ can be related to an integral of the scalogram over the time-scale plane:
+        $$\int_{a>0}\int_{-\infty}^{\infty}|CWT_{x}(\tau,a)|^{2}\frac{dad\tau}{a^{2}}=E_{x}$$
+        (This formula assumes specific normalization and admissibility conditions for the wavelet).
+
+* **Interpretation**: Similarly to the spectrogram (which shows energy distribution in the time-frequency domain for STFT), the **scalogram describes how the signal's energy is distributed over the time-scale domain**.
+    * It provides a visual representation of which scales (related to frequencies) are prominent at which time locations.
+
+* **Key Difference from Spectrogram (Resolution)**:
+    * The crucial advantage highlighted is that, in contrast to the spectrogram, the energy in the scalogram is distributed with **different resolutions**. 
+    
+        This directly relates to the **multi-resolution property of wavelets**:
+        * At **small scales** '$a$' (**high frequencies**), you get **good time resolution** and **coarser frequency/scale resolution**.
+        * At **large scales** '$a$' (**low frequencies**), you get **good frequency/scale resolution** and **coarser time resolution**.
+
+#### The Scalogram vs. Spectrogram: Time-Frequency Resolution
+
+![alt text](./images/spectrogram_vs_scalogram.png)
+
+1.  **STFT (Diagram a):**
+    * The STFT (which leads to the spectrogram $|S[k,m]|^2$ or $|Sf(u,\zeta)|^2$ in the slide's notation) uses a **fixed-size window**.
+    * This results in a **uniform tiling** of the time-frequency plane. 
+        * All analysis windows (the "tiles") have the **same dimensions** in time and frequency.
+    * **Consequence:** The time resolution and frequency resolution are fixed across all frequencies.
+        * If you choose a **short window** for **good time** resolution, you get poor frequency resolution for all frequencies.
+        * If you choose a **long window** for **good frequency** resolution, you get poor time resolution for all frequencies.
+
+2.  **CWT (Diagram b):**
+    * The CWT (which leads to the scalogram $|Wf(a,b)|^2$ or $|CWT_x(\tau,a)|^2$) uses wavelets whose **duration changes with scale (and thus frequency)**.
+    * This results in a **non-uniform, adaptive tiling** of the time-frequency (or more accurately, time-scale) plane:
+        * **High Frequencies (Small Scales 'a'):** Wavelets are **compressed** (short in time). 
+            * This gives **good time resolution** (narrow tiles in the time dimension) but **poor frequency resolution** (wide tiles in the frequency dimension). 
+            * This is good for **localizing fast, transient events**.
+        * **Low Frequencies (Large Scales 'a'):** Wavelets are **stretched** (long in time). 
+            * This gives **poor time resolution** (wide tiles in the time dimension) but **good frequency resolution** (narrow tiles in the frequency dimension). 
+            * This is good for precisely **identifying low-frequency components** that are typically **longer-lasting**.
+
+**Key Advantage of CWT/Scalogram shown here:**
+The adaptive tiling of the CWT is its main strength. It provides a more flexible way to analyze signals that have features of different durations and frequency characteristics. It automatically adjusts its "view" to be appropriate for high-frequency (short-duration) events and low-frequency (long-duration) events.
+
+The slides then show exercises (slides 80-81) demonstrating scalograms for chirp signals and ECG signals, which often have these kinds of mixed characteristics.
+
+## 2D Discrete Fourier Transform
+
+The Fourier analysis concepts we've been discussing can be extended from 1D signals (like time series) to **2D signals**, with **images** being a primary example. 
+
+* **Input Signal**: A 2D signal, such as an image, can be represented as a **2D array of values** $X[m,n]$ (or $X$ in the slide, likely a typo and should be $x[m,n]$ or $f[m,n]$ for the input signal in spatial domain), where $m$ and $n$ are spatial indices (e.g., row and column). The slide denotes this as $X \in \mathbb{C}^{M \times N}$, meaning it's an $M \times N$ matrix of complex values (though grayscale images are typically real-valued, color images can be represented with multiple components).
+
+* **2D DFT (Analysis Formula)**:
+    The 2D DFT transforms the spatial domain signal $X[m,n]$ into a 2D frequency domain representation $\hat{X}[k,l]$ (or $F[k,l]$ often). The formula is a direct extension of the 1D DFT:
+    $$\hat{X}[k,l] = \sum_{m=0}^{M-1}\sum_{n=0}^{N-1}X[m,n]e^{-j2\pi\left(\frac{k}{M}m+\frac{l}{N}n\right)}$$
+    for $k=0, ..., M-1$ and $l=0, ..., N-1$. 
+    * Here, $k$ and $l$ are the discrete frequency indices in the two spatial directions.
+    * The terms $e^{-j2\pi\frac{k}{M}m}$ and $e^{-j2\pi\frac{l}{N}n}$ represent discrete complex sinusoids (or spatial frequencies) in the $m$ and $n$ directions, respectively.
+
+* **Inverse 2D DFT (IDFT) (Synthesis Formula)**:
+    This formula reconstructs the original 2D signal $X[m,n]$ from its 2D DFT coefficients $\hat{X}[k,l]$:
+    $$X[m,n] = \frac{1}{MN}\sum_{k=0}^{M-1}\sum_{l=0}^{N-1}\hat{X}[k,l]e^{j2\pi\left(\frac{k}{M}m+\frac{l}{N}n\right)}$$
+    
+
+* **Interpretation**:
+    The 2D DFT represents the 2D signal (e.g., an image) as a sum of 2D complex sinusoidal basis functions, each with a specific spatial frequency in the horizontal and vertical directions. 
+    * $\hat{X}[k,l]$ gives the amplitude and phase of the 2D sinusoid with spatial frequencies $(k/M, l/N)$.
+    * Low values of $k$ and $l$ correspond to low spatial frequencies (slow variations in intensity across the image).
+    * High values of $k$ and $l$ correspond to high spatial frequencies (rapid variations, edges, textures).
