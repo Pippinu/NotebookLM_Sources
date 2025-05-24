@@ -324,21 +324,28 @@ There are a few variations in how the threshold can be applied:
 * **Zone vs Threshold coding**: Threshold coding, especially the adaptive and normalization array approaches, allows for more flexibility in preserving important image features compared to fixed zonal coding.
     * These quantization strategies aim to eliminate information that is either statistically less important (low variance) or has a smaller perceptual impact (low magnitude), thereby achieving compression.
 
-### JPEG: Joint Photographic Experts Group (SISTEMARE)
+### JPEG: Joint Photographic Experts Group (MUCH MORE THAN SLIDE) (SISTEMARE)
 
-JPEG is one of the most popular and widely implemented **image compression standards**, especially for continuous-tone images like photographs. The compression process in baseline JPEG (the most common version) involves three primary sequential steps:
+JPEG is one of the most popular and widely implemented **image compression standards**, especially for continuous-tone images like photographs. 
+
+#### Steps
 
 1.  **Discrete Cosine Transform (DCT) Computation:**
-    * The image is first divided into $8 \times 8$ pixel blocks.
-    * These blocks are processed from left to right, top to bottom.
-    * Before applying the DCT, the pixel values (which are typically unsigned integers, e.g., 0-255) are **level-shifted** by subtracting $2^{L-1}$ (where $L$ is the number of bits per pixel, usually 8, so $128$ is subtracted). This centers the pixel values around zero.
-    * The 2D Discrete Cosine Transform (DCT) is then computed for each $8 \times 8$ block. This transforms the $64$ spatial pixel values into $64$ DCT coefficients, representing different spatial frequencies. The coefficient at $(0,0)$ is the DC coefficient (related to the average intensity of the block), and the other 63 are AC coefficients.
+    * **Divide**: The image is first divided into $8 \times 8$ pixel blocks.
+    * **Process**: These blocks are processed from left to right, top to bottom.
+    * **Level Shifting**: Before applying the DCT, the pixel values (unsigned integers, 0-255) are **level-shifted** by subtracting $\large 2^{L-1}$ to center pixel values around zero.
+        * $L$ is the **number of bits per pixel**, usually $8$, so $128$ is subtracted.
+    * **DCT**: 2D Discrete Cosine Transform (**DCT**) is then computed for each $8 \times 8$ block. This transforms the $64$ spatial pixel values into $64$ DCT coefficients, representing different spatial frequencies. The coefficient at $(0,0)$ is the DC coefficient (related to the average intensity of the block), and the other 63 are AC coefficients.
 
 2.  **Quantization:**
-    * Each of the 64 DCT coefficients in a block is then **quantized**. This is the primary lossy step in JPEG compression.
-    * Quantization is performed by dividing each DCT coefficient $T(u,v)$ by a corresponding value $Z(u,v)$ from an $8 \times 8$ **quantization table** (similar to the normalization array $Z$ discussed in threshold coding) and then rounding to the nearest integer:
+    * Each of the 64 DCT coefficients in a block is then **quantized** (*crucial lossy step in JPEG compression*)
+    * Quantization is performed by dividing each DCT coefficient $\large T(u,v)$ by a corresponding value $\large Z(u,v)$ from an $\large 8 \times 8$ **quantization table** (similar to *normalization array* $Z$) and then rounding to the nearest integer:
         $$\large \hat{T}(u,v) = \text{round}\left[\frac{T(u,v)}{Z(u,v)}\right]$$
-    * The quantization table typically has larger values for higher spatial frequencies (meaning these components are quantized more coarsely, leading to more information loss for fine details) and smaller values for lower spatial frequencies (preserving them more accurately). The specific table used can vary and affects the compression ratio and image quality.
+    * The quantization table, typically, has:
+        * **Larger values** for **higher spatial frequencies**, meaning these components are quantized more coarsely, leading to more information loss for fine details 
+        * **Smaller values** for **lower spatial frequencies**, preserving them more accurately. 
+        
+        The specific table used can vary and affects the compression ratio and image quality.
 
 3.  **Variable-Length Code Assignment (Entropy Coding):**
     * The quantized $8 \times 8$ block of coefficients is then **reordered** into a 1D sequence using a **zigzag scan**. This scan pattern groups low-frequency coefficients (which are more likely to be non-zero and have larger magnitudes after quantization) at the beginning of the sequence, followed by higher-frequency coefficients, which are often zero after quantization.
@@ -347,3 +354,5 @@ JPEG is one of the most popular and widely implemented **image compression stand
     * The AC coefficients are then encoded using a combination of **run-length encoding (RLE)** for the runs of zeros and **Huffman coding** (or sometimes arithmetic coding) for the non-zero AC coefficient values and the run lengths. This variable-length coding assigns shorter codes to more frequent symbols, further reducing the data size.
 
 The resulting stream of coded data is the compressed JPEG image. Decompression involves reversing these steps: entropy decoding, de-quantization (multiplying by the same quantization table values), and applying the inverse DCT to each block.
+
+
