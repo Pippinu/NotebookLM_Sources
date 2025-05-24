@@ -17,7 +17,9 @@ So, the core idea of decomposing or analyzing a signal by measuring its similari
 
 The **Fourier Transform** of a continuous-time signal $x(t)$ is defined as:
 
-$$X(f) = \int_{-\infty}^{\infty} x(t)e^{-j2\pi ft}dt$$
+$$
+\Large X(f) = \int_{-\infty}^{\infty} x(t)e^{-j2\pi ft}dt
+$$
     
 This function $X(f)$ is also known as the **spectrum** of the signal $x(t)$.
 
@@ -809,22 +811,44 @@ The slides then show exercises (slides 80-81) demonstrating scalograms for chirp
 
 The Fourier analysis concepts we've been discussing can be extended from 1D signals (like time series) to **2D signals**, with **images** being a primary example. 
 
-* **Input Signal**: A 2D signal, such as an image, can be represented as a **2D array of values** $X[m,n]$ (or $X$ in the slide, likely a typo and should be $x[m,n]$ or $f[m,n]$ for the input signal in spatial domain), where $m$ and $n$ are spatial indices (e.g., row and column). The slide denotes this as $X \in \mathbb{C}^{M \times N}$, meaning it's an $M \times N$ matrix of complex values (though grayscale images are typically real-valued, color images can be represented with multiple components).
+* **Input Signal**: A 2D signal, such as an image, can be represented as a **2D array of complex values** $\large X[m,n] \in \mathbb{C}^{M \times N}$, where $m$ and $n$ are spatial indices (e.g., row and column). 
+    * *Note*: grayscale images are typically real-valued, color images can be represented with multiple components.
 
 * **2D DFT (Analysis Formula)**:
     The 2D DFT transforms the spatial domain signal $X[m,n]$ into a 2D frequency domain representation $\hat{X}[k,l]$ (or $F[k,l]$ often). The formula is a direct extension of the 1D DFT:
-    $$\hat{X}[k,l] = \sum_{m=0}^{M-1}\sum_{n=0}^{N-1}X[m,n]e^{-j2\pi\left(\frac{k}{M}m+\frac{l}{N}n\right)}$$
+    
+    $$\Large \hat{X}[k,l] = \sum_{m=0}^{M-1}\sum_{n=0}^{N-1}X[m,n]e^{-j2\pi\left(\frac{k}{M}m+\frac{l}{N}n\right)}$$
+
     for $k=0, ..., M-1$ and $l=0, ..., N-1$. 
-    * Here, $k$ and $l$ are the discrete frequency indices in the two spatial directions.
-    * The terms $e^{-j2\pi\frac{k}{M}m}$ and $e^{-j2\pi\frac{l}{N}n}$ represent discrete complex sinusoids (or spatial frequencies) in the $m$ and $n$ directions, respectively.
+    * Here, $k$ and $l$ are the **discrete frequency indices** (not spatial anymore) in the two spatial directions.
+    * The terms $\Large e^{-j2\pi\frac{k}{M}m}$ and $\Large e^{-j2\pi\frac{l}{N}n}$ represent **discrete complex sinusoids** (or spatial frequencies) in the $m$ and $n$ directions, respectively.
 
 * **Inverse 2D DFT (IDFT) (Synthesis Formula)**:
     This formula reconstructs the original 2D signal $X[m,n]$ from its 2D DFT coefficients $\hat{X}[k,l]$:
-    $$X[m,n] = \frac{1}{MN}\sum_{k=0}^{M-1}\sum_{l=0}^{N-1}\hat{X}[k,l]e^{j2\pi\left(\frac{k}{M}m+\frac{l}{N}n\right)}$$
+    
+    $$\Large X[m,n] = \frac{1}{MN}\sum_{k=0}^{M-1}\sum_{l=0}^{N-1}\hat{X}[k,l]e^{j2\pi\left(\frac{k}{M}m+\frac{l}{N}n\right)}$$
     
 
 * **Interpretation**:
     The 2D DFT represents the 2D signal (e.g., an image) as a sum of 2D complex sinusoidal basis functions, each with a specific spatial frequency in the horizontal and vertical directions. 
     * $\hat{X}[k,l]$ gives the amplitude and phase of the 2D sinusoid with spatial frequencies $(k/M, l/N)$.
-    * Low values of $k$ and $l$ correspond to low spatial frequencies (slow variations in intensity across the image).
-    * High values of $k$ and $l$ correspond to high spatial frequencies (rapid variations, edges, textures).
+    * **Low values** of $k$ and $l$ correspond to **low spatial frequencies** (slow variations in intensity across the image).
+    * **High values** of $k$ and $l$ correspond to **high spatial frequencies** (rapid variations, edges, textures).
+
+### Examples
+![alt text](./images/2d_dft.png)
+
+The image on slide 83 shows examples of the **real part of 2D complex sinusoidal basis functions** that are used in the 2D Discrete Fourier Transform (DFT). Each small image represents one such basis function, $\Large cos(2\pi(\frac{k}{M}m+\frac{l}{N}n))$, for different values of $k$ and $l$ (the frequency indices).
+
+Here's a brief explanation:
+
+* **What they represent:** Each image visualizes a specific **spatial frequency pattern**.
+    * The indices $k$ and $l$ determine **how rapidly the pattern oscillates** in the **horizontal** (n-direction, related to $l$) and **vertical** (m-direction, related to $k$) directions, respectively.
+
+* **Interpretation of the examples shown (from slide 83):**
+    * **$\Large k=1, l=1$ or similar low values:** This pattern shows slow variations (long wavelengths) in both horizontal and vertical directions. These represent low spatial frequencies.
+    * **$\Large k=1, l=2$ or $k$ small, $l$ larger:** This pattern oscillates slowly in the vertical direction (small $k$) but more rapidly in the horizontal direction (larger $l$). This represents low vertical spatial frequency and higher horizontal spatial frequency.
+    * **$\Large k=2, l=1$ or $k$ larger, $l$ small:** This is the opposite of the top-right. It oscillates more rapidly in the vertical direction and slowly in the horizontal direction. This represents higher vertical spatial frequency and low horizontal spatial frequency.
+    * **$\Large k=2, l=2$ or similar larger values for both:** This pattern shows rapid variations in both horizontal and vertical directions. These represent high spatial frequencies in both directions, which would capture fine details or textures in an image.
+
+In essence, the 2D DFT decomposes an image into a sum of these (and other) 2D sinusoidal patterns, each with a specific amplitude and phase given by the corresponding DFT coefficient $\hat{X}[k,l]$.
