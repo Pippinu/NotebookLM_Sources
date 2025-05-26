@@ -1,20 +1,30 @@
-### Zonal Coding
 
-Zonal coding is one of the two main approaches mentioned for choosing which transform coefficients to keep or how to quantize them, following the transformation stage in block-based image compression.
+# Chapter 2.1: Transmission Media
 
-* **Core Principle:** The fundamental idea behind zonal coding is based on information theory concepts, which suggest that transform coefficients with the **maximum variance** carry the most significant portion of the image information within a block. Therefore, these are the coefficients that should be prioritized and retained during the compression process.
-* **Location of High-Variance Coefficients:** For many common types of images and widely used transforms (like the Discrete Cosine Transform - DCT, which is central to JPEG compression), these high-variance coefficients are typically concentrated in a specific region of the transform coefficient block $T(u,v)$. This region is usually around the origin $(u=0, v=0)$, corresponding to the **low-frequency components** of the image block. The $T(0,0)$ coefficient is the DC coefficient, representing the average intensity of the block, and it usually has the highest energy/variance.
-* **Zonal Mask:**
-    * To implement zonal coding, a **zonal mask** is constructed. This mask is essentially a binary template of the same size as the transform coefficient block (e.g., $\large n \times n$).
-    * The mask has a '1' (or some indicator to keep/finely quantize) in locations corresponding to coefficients with high variance (i.e., within the predefined "zone").
-    * It has a '0' (or an indicator to discard/coarsely quantize) in all other locations outside this zone.
-    * The example image on the slide shows a zonal mask on the left, where the '1's are concentrated in the top-left corner, indicating that these low-frequency coefficients are selected.
-* **Bit Allocation:**
-    * Often, zonal coding is combined with a **bit allocation** strategy. Coefficients within the selected zone (deemed more important) are allocated more bits, allowing for finer quantization and thus higher precision.
-    * Coefficients outside the zone might be allocated fewer bits (coarser quantization) or discarded entirely (allocated zero bits).
-    * The example image on the right (labeled "bit allocation") illustrates this, showing more bits assigned to the low-frequency coefficients (top-left) and progressively fewer or zero bits to higher-frequency coefficients.
+## 1. Overview and Classification
 
-In essence, zonal coding predefines a "zone" of what are assumed to be the most important coefficients (typically low-frequency) and focuses on preserving them, while reducing or eliminating information from coefficients outside this zone.
+The purpose of the physical layer is to transport bits between machines. The physical media used for this transport are classified into two main groups:
 
----
-Next is "Threshold Coding." Shall we continue?
+* **Guided Media**: These use a physical path, like a cable, to guide the signal from sender to receiver. Examples include copper wire and fiber optic cables.
+* **Unguided Media**: These transmit signals through the air or space without a physical conductor. This is also known as wireless communication. Examples include radio waves, microwaves, and satellite links.
+
+## 2. Guided Transmission Media
+
+
+
+## 3. Unguided Transmission Media (Wireless)
+
+Wireless communication uses the electromagnetic spectrum to transmit signals.
+
+* **Radio Waves**:
+    * Used by technologies like Wi-Fi and Bluetooth.
+    * They are omnidirectional (travel in all directions) and can penetrate obstacles like walls, making them ideal for indoor networks.
+
+* **Microwaves**:
+    * Higher frequency waves that travel in a straight line (line-of-sight).
+    * Used for point-to-point communication, such as connecting two buildings or for satellite communications. They are easily blocked by solid objects.
+
+* **Satellite Communication**:
+    * A satellite in orbit acts as a microwave repeater in the sky.
+    * It receives a signal from a ground station, amplifies it, and re-broadcasts it to a receiving station elsewhere on Earth.
+    * The altitude of the satellite (LEO, MEO, GEO) significantly impacts the signal delay (latency).
