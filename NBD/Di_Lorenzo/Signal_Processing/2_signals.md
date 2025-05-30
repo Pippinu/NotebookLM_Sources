@@ -18,7 +18,7 @@ However, **real-world processing** is usually done on computers using **discrete
 **Definition**: Mathematically, a discrete-time signal $x[n]$ is a complex-valued sequence, where $n$ is an integer index ($n \in \mathbb{Z}$).
 
 Discrete-time signals are obtained by ***sampling*** a continuous-time signal. 
-* This means observing the continuous signal $x(t)$ at specific, equally spaced time instants $nT$, where **$T$** is the **sampling period**. So, the discrete-time signal is $x[n] = x(nT)$.
+* This means observing the continuous signal $x(t)$ at specific, equally spaced time instants $nT$, where **$T$** is the **sampling period**. So, the discrete-time signal is $\large x[n] = x(nT)$.
 
 ![alt text](./images/discrete_signals.png)
 

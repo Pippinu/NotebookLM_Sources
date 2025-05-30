@@ -482,71 +482,92 @@ This improved protocol is known as **CSMA/CD**.
 
 This process divides the channel's time into periods of successful frame transmission and **contention periods**, which are composed of time slots where stations compete for access.
 
-## Ethernet (CONTINUE FROM HERE)
+## Ethernet
 
 Ethernet, defined by the **IEEE 802.3 standard**, is arguably the most ubiquitous wired networking technology in the world.
 
 There are two primary kinds of Ethernet:
 
-  * **Classic Ethernet**: The original shared-medium version that uses the MAC protocols we have been studying, like CSMA/CD.
-  * **Switched Ethernet**: The modern standard, where devices called switches are used to connect computers, creating what are effectively point-to-point links.
+  * **Classic Ethernet**: Original shared-medium version that uses the MAC protocols, like CSMA/CD.
+  * **Switched Ethernet**: Modern standard, use switches to connect computers, creating effectively point-to-point links.
 
 ### Classic Ethernet Topology
 
 In its original form, a Classic Ethernet network consisted of a single long cable (often referred to as the "ether") to which all computers on the network were attached.
 
-  * This shared cable had a maximum length per segment.
-  * To extend the network beyond this limit, devices called **repeaters** were used to regenerate the signal and connect multiple segments together.
+  * This shared cable had a **maximum length per segment**.
+  * To **extend the network** beyond this limit, **repeaters** were used to regenerate the signal and connect multiple segments together.
+
+  ![alt text](./images/classic_ethernet.png)
 
 #### Frame Format
 
-The structure of a Classic Ethernet (IEEE 802.3) frame is standardized to ensure interoperability.
+The structure of a Classic Ethernet (IEEE 802.3) frame is standardized to ensure **interoperability**.
+* *Interoperability*: ability of different systems, devices, or components (in this case, networking equipment from various manufacturers) to work together and exchange information effectively.
+
+**Minimum size** of the frame in 64KB.
 
 The fields are as follows:
+* **Preamble** (8 bytes) 
+    * This begins with **seven bytes** of `10101010` used by the receiver's hardware to **synchronize its clock**. 
+    * It is followed by a final byte, `10101011`, called the **Start of Frame (SoF) delimiter**, which marks the **beginning of the actual frame content**.
+* **Destination and Source Addresses** (6 bytes each): Contain the link-layer **MAC addresses** of the destination and source machines.
+* **Length** (2 bytes): Specifies the number of bytes in the Data field.
+* **Data** (up to 1500 bytes): **Payload of the frame**, which typically contains a packet from a higher layer, such as an IP packet. 
+    * The frame must be at least 64 bytes long, so this field must be at least **46 bytes**.
+* **Pad** (variable): If the data field is smaller than 46 bytes, padding field is used to fill the frame out to the minimum required size.
+* **Checksum** (4 bytes): An **error-detecting code** (specifically, a ***Cyclic Redundancy Check*** or ***CRC***) that covers the entire frame. 
+    * If the receiver computes a different checksum, the frame is known to be corrupt and is **discarded**.
 
-  * **Preamble** (8 bytes): This begins with seven bytes of `10101010` used by the receiver's hardware to synchronize its clock. It is followed by a final byte, `10101011`, called the **Start of Frame (SoF) delimiter**, which marks the beginning of the actual frame content.
-  * **Destination and Source Addresses** (6 bytes each): These fields contain the link-layer **MAC addresses** of the destination and source machines.
-  * **Length** (2 bytes): Specifies the number of bytes in the Data field.
-  * **Data** (up to 1500 bytes): This is the payload of the frame, which typically contains a packet from a higher layer, such as an IP packet. The frame must be at least 64 bytes long, so this field must be at least 46 bytes.
-  * **Pad** (variable): If the data field is smaller than 46 bytes, this padding field is used to fill the frame out to the minimum required size.
-  * **Checksum** (4 bytes): An error-detecting code (specifically, a Cyclic Redundancy Check or CRC) that covers the entire frame. If the receiver computes a different checksum, the frame is known to be corrupt and is discarded.
+![alt text](./images/ethernet_frame.png)
 
 #### MAC Protocol: Binary Exponential Backoff
 
-Classic Ethernet uses the **1-persistent CSMA/CD** algorithm as its Media Access Control protocol. The key to its operation is how it handles retransmissions after a collision.
+Classic Ethernet uses the **1-persistent CSMA/CD** algorithm as its Media Access Control protocol. 
 
-  * When a collision is detected, stations immediately send a "jam signal" to ensure all other stations are aware of the collision, and then they abort their transmission.
+The key to its operation is how it handles retransmissions after a collision:
+* When a **collision is detected**, stations immediately send a "***jam signal***" to ensure all other stations are aware of the collision, and then **they abort their transmission**.
+* To determine how long to wait before trying again, they use a **randomized backoff algorithm** called ***binary exponential backoff***.
 
-  * To determine how long to wait before trying again, they use a randomized backoff algorithm called **binary exponential backoff**.
+**The Algorithm**:
+1.  Time on the channel is divided into discrete **slots**, each 51.2 µs long (the time to send 512 bits).
+2.  After the first collision (`i=1`), each station chooses a random number `k` from the set `{0, 1}` and waits `k` slot times.
+3.  If they collide again (`i=2`), they each choose a random `k` from `{0, 1, 2, 3}`.
+4.  In general, after `i` collisions, each station chooses a random `k` from `0` to `2^i - 1`.
+5.  The range of the random interval is **capped after 10 collisions** (at 1023 slots). 
+    * If a frame still cannot be sent after **16 collisions**, the **station gives up and reports a failure**.
 
-  * **The Algorithm**:
-
-    1.  Time on the channel is divided into discrete **slots**, each 51.2 µs long (the time to send 512 bits).
-    2.  After the first collision (`i=1`), each station chooses a random number `k` from the set `{0, 1}` and waits `k` slot times.
-    3.  If they collide again (`i=2`), they each choose a random `k` from `{0, 1, 2, 3}`.
-    4.  In general, after `i` collisions, each station chooses a random `k` from `0` to `2^i - 1`.
-    5.  The range of the random interval is capped after 10 collisions (at 1023 slots). If a frame still cannot be sent after 16 collisions, the station gives up and reports a failure.
-
-This method cleverly adapts to the network load. With few stations colliding, the backoff delays are short. With many stations colliding, the backoff delays become much longer, spreading out their retransmission attempts and increasing the chance of success.
+This method cleverly adapts to the network load:
+* With **few stations colliding**, the backoff delays are **short**. 
+* With **many stations colliding**, the backoff delays become **much longer**, spreading out their retransmission attempts and increasing the chance of success.
 
 #### Performance
 
-The efficiency of Classic Ethernet depends heavily on the frame size and the number of stations competing for the channel.
+The efficiency of Classic Ethernet depends on the **frame size** and the **number of stations competing** for the channel.
 
-As the graph shows, longer frames lead to higher channel efficiency. This is because the overhead of the contention period (where collisions can happen) is fixed, so a longer data transmission time means less time is wasted on contention relative to the amount of useful data sent.
+As the graph shows, **longer frames** lead to **higher channel efficiency**. 
+* This is because the **overhead of the contention period** (where collisions can happen) is **fixed**, so a longer data transmission time means less time is wasted on contention relative to the amount of useful data sent.
+
+![alt text](./images/MAC_protocol_performance.png)
 
 -----
 
 ### Switched Ethernet
 
-Modern networks use **Switched Ethernet**, which replaces the single shared cable of Classic Ethernet with an intelligent device called a **switch**.
+Modern networks use **Switched Ethernet**, which replaces the single shared cable of Classic Ethernet with **switches**.
 
-  * A switch has numerous ports, and each port connects to a single computer or another network device, creating a dedicated link.
-  * The key feature of a switch is that it forwards frames intelligently. It reads the destination MAC address of an incoming frame and sends it *only* to the port connected to that destination.
-  * This creates independent **collision domains** for each port. A station on port 1 can transmit at the same time as a station on port 2 without causing a collision.
-  * Furthermore, if the links are **full duplex**, a station can send and receive data simultaneously, eliminating the possibility of collisions entirely for that link.
+![alt text](./images/ethernet_switch.png)
 
-Switches can be interconnected to build large, hierarchical networks that can handle much more traffic than a classic shared-medium network.
+* A switch has numerous ports, and each port connects to a single computer or another network device, creating a dedicated link.
+* The key feature of a switch is that it forwards frames intelligently. 
+    * It reads the destination MAC address of an incoming frame and sends it *only* to the port connected to that destination.
+* This creates independent **collision domains** for each port, if half-duplex. 
+    * A station on port 1 can transmit at the same time as a station on port 2 without causing a collision.
+* Furthermore, if the links are **full duplex**, a station can send and receive data simultaneously, eliminating the possibility of collisions entirely for that link.
+
+**Switches can be interconnected** to build large, hierarchical networks that can handle much more traffic than a classic shared-medium network.
+
+![alt text](./images/interconnected_switches.png)
 
 -----
 
@@ -556,17 +577,26 @@ Switches can be interconnected to build large, hierarchical networks that can ha
 
 To send a frame from one machine to another on the same local network, a system of link-layer addresses is needed.
 
-  * Every network interface (adapter) has a unique link-layer address called a **physical address** or, most commonly, a **MAC address**.
-  * MAC addresses are 6 bytes (48 bits) long and are usually written in hexadecimal notation, such as `1A-23-F9-CD-06-9B`.
-  * These addresses are designed to be globally unique. The IEEE assigns a 24-bit prefix to each manufacturer, who then assigns a unique 24-bit value to each adapter it produces.
+* Every network interface (*network adapter*) has a **unique link-layer address** called a ***physical address*** or, most commonly, a ***MAC address***.
+* MAC addresses are 6 bytes (48 bits) long and are usually written in ***hexadecimal notation***, such as `1A-23-F9-CD-06-9B`.
+* These addresses are designed to be **globally unique**. 
+    * The IEEE assigns a 24-bit prefix to each manufacturer, who then assigns a unique 24-bit value to each adapter it produces.
+
+![alt text](./images/MAC_address.png)
 
 ### Address Resolution Protocol (ARP)
 
-While frames are sent using MAC addresses, applications and higher-level protocols like IP use IP addresses. The **Address Resolution Protocol (ARP)** is the critical glue that connects these two addressing schemes.
+While frames are sent using MAC addresses, applications and higher-level protocols like IP use IP addresses. 
 
-  * **Function**: When a host needs to send a packet to an IP address on its own local network, it uses ARP to find the corresponding MAC address.
-  * **ARP Table**: Each host and router keeps an **ARP table** in memory. This table is a cache of recently resolved IP-to-MAC address mappings.
-  * **TTL**: Entries in the table have a Time-to-Live (TTL), so old mappings eventually expire and are removed. This allows the network to adapt if a device's network card is replaced (changing its MAC address).
+The **Address Resolution Protocol (ARP)** is the critical glue that connects these two addressing schemes.
+
+* **Function**: When a host needs to send a packet to an IP address on its own local network, it uses ARP to find the corresponding MAC address.
+* **ARP Table**: Each host and router keeps an **ARP table** in memory. 
+    * This table is a cache of recently resolved IP-to-MAC address mappings.
+* **TTL**: Entries in the table have a Time-to-Live (TTL), so old mappings eventually expire and are removed. 
+    * This allows the network to adapt if a device's network card is replaced (changing its MAC address).
+
+![alt text](./images/ARP_protocol.png)
 
 -----
 
@@ -579,17 +609,25 @@ A switch uses a **switch table** to make intelligent decisions about where to se
   * **Forwarding**: Determining which output port a frame should be sent to.
   * **Filtering**: Deciding to drop a frame because it does not need to be sent anywhere else.
 
-When a frame arrives at a switch on a given port, the switch looks up the frame's **destination MAC address** in its table and takes one of three actions:
+![alt text](./images/switch_table.png)
 
-1.  **Address not found**: If the destination address is not in the table, the switch does not know where to send it. It performs a **broadcast** (also called flooding), sending a copy of the frame to all ports except the one on which it arrived.
-2.  **Address found on the incoming port**: If the table indicates that the destination machine is on the same segment from which the frame came, there is no need to forward it. The switch performs **filtering** and discards the frame.
+When a frame arrives at a switch on a given port, the switch looks up the frame's **destination MAC address** in its table and takes **one of three actions**:
+
+1.  **Address not found**: If the destination address is not in the table, the switch does not know where to send it. 
+    * It performs a **broadcast** (also *flooding*), sending a copy of the frame to **all ports except the one on which it arrived**.
+2.  **Address found on the incoming port**: If the table indicates that the destination machine is on the same segment from which the frame came, there is **no need to forward it**. 
+    * The switch performs **filtering** and discards the frame.
 3.  **Address found on a different port**: If the table shows that the destination is on a different port, the switch performs **forwarding** and sends the frame only to that specific port.
 
 ### Self-Learning
 
-Switches build their tables automatically using a **self-learning** mechanism. This process is transparent and requires no manual configuration.
+Switches build their tables **automatically** using a ***self-learning*** mechanism:
 
-1.  The switch table starts empty.
+1.  The switch table **starts empty**.
 2.  For every frame that arrives at the switch, the switch examines the **source MAC address**.
-3.  It records the source MAC address, the port on which the frame arrived, and the current time in its switch table. This is how the switch learns the location of every active device.
-4.  Entries that are not refreshed for a certain period (the **aging time**) are removed from the table. This ensures the table remains up-to-date as devices are moved or disconnected from the network.
+3.  It **records**:
+    * Source MAC address
+    * Port on which the frame arrived
+    * Current time in its switch table.
+4.  Entries that are not refreshed for a certain period (the **aging time**) are **removed** from the table. 
+    * This ensures the table remains up-to-date as devices are moved or disconnected from the network.

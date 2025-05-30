@@ -95,3 +95,101 @@ While ***both analyze literature***, they do so with different goals and methods
             that hinder integration into real-world.
 
 # CBA
+
+## What is it?
+
+A Cost-Benefit Analysis (CBA) is a **systematic process** for **calculating and comparing** the **monetary costs and benefits** of a project or decision to determine if it is **worthwhile**.
+
+In our project, a CBA involves:
+* Quantifying the **economic impact** of immersive digital twin systems in healthcare delivery.
+* Identifying both **negative** (costs) and **positive** (benefits) **impacts**.
+* **Assigning a monetary value** to these impacts.
+* Discounting these future cash flows to a present value to account for the time value of money.
+* Calculating metrics like ***Net Present Value*** (NPV), ***Internal Rate of Return*** (IRR), and the ***Benefit-Cost Ratio*** (BCR) to **assess economic viability**.
+* Analyzing how results change under **different scenarios and levels of risk.**
+
+## Cost-Benefit Analysis (CBA): Pros, Cons, and Challenges
+
+### Pros (Advantages)
+
+* **Provides a Rational Framework**: CBA offers data-driven method to evaluate project impacts in a more **objective way**.
+* **Enables Project Comparison**: By translating all impacts into a common monetary unit, it allows to compare different projects and allocate scarce resources to the one that provides the greatest benefit.
+* **Promotes Transparency**: **Assumptions and valuations have to be explicitly stated**, making the process **transparent to stakeholders**.
+
+### Cons (Disadvantages) of CBA
+
+* **Difficulty in Valuing Intangibles**: Assigning a monetary value to non-market goods. 
+    * Placing a price on factors like "patient comfort," "learner confidence", or a Quality-Adjusted Life Year (QALY) is inherently difficult and can be controversial.
+* **Sensitivity to Assumptions**: Particularly the ***discount rate chosen*** and ***projections about uptake and costs***.
+* **Potential for Manipulation**: by **selecting assumptions that favor** a preconceived conclusion.
+
+### Limits and Challenges Faced in a CBA and how to address them.
+
+* **Managing Uncertainty**: dealing with uncertainty about the future. 
+    * Our project's success is dominated by risks like **suboptimal user uptake**, **hardware cost volatility**, and the **variance in clinical effectiveness**. 
+    * To address this, extensive risk analysis is needed. including scenario analysis, sensitivity analysis, and a Monte Carlo simulation.
+* **Monetizing Non-Market Impacts**: Your analysis had to use "hypothetical-market" valuation methods to assign a monetary value to benefits that don't have a market price, such as the social value derived from QALYs or the consumer surplus from access to a digital twin environment. These are necessary estimates but represent a limitation.
+* **Ignoring Equity**: A standard CBA can overlook how costs and benefits are distributed across society
+    * Our project addressed this by conducting the analysis on ***high-income area***, *Rome*, and ***lower-income province***.
+
+# Specific questions
+
+### If you were a manager, what could be the outcome you could get from this study, what could you implement?**
+
+As a manager, outcome from this study is a clear, investing in immersive digital twins is highly profitable.
+
+Based on the findings, I would implement one of two options:
+* **If capital is available**, I would prioritize the **Hospital Simulation & Education Network**. 
+    * It delivers the ***largest absolute financial return***.
+* **If the budget is more constrained**, I would begin with a phased rollout of **Patient-Specific Virtual Care**. 
+    * It is ***more efficient per euro invested***.
+
+### For the implementation (about first question), what should you consider to address it?
+
+The most critical factor to address is managing **user uptake (adoption)**, because the main project's risk.
+
+To address it, as said in our conclusion, I would consider these key actions:
+* Do **phased rollout**, led by clinical experts, to prove it works before we go fully invest in the project.
+* Negotiate **long-term contracts** with hardware vendors to ***mitigate the risk of price volatility***.
+* Use live dashboards to track our results and make sure the benefits are real..
+
+**3. How does the Systematic Review link the literature to address the research question?**
+
+The Systematic Review (SR) is a **bridge between the existing literature and the research question**. 
+
+To achieve this:
+* Starts by translating research question into a *searchable format* (***QUERY***) using the **PICO framework**.
+* It then uses reproducible **search strategy** to identify all relevant studies.
+* Finally, applies **inclusion and exclusion criteria** to filter the literature, ensuring that only the studies that directly address the research question are included in the final **synthesis** of evidence.
+
+**4. What is the reliability of your estimate?**
+
+The reliability of the positive financial estimate is **very high**. 
+
+This is ***not a fragile estimate*** but a consistent finding under **multiple conditions**:
+* **Scenario Analysis**: The project NPV **remains positive** even in the most "Pessimistic" scenario
+    * Worst Scenario: ***low uptake and high costs***.
+* **Break-Even Analysis**: The projects remain **positive** even if with our lowest estimated adoption rates.
+* **Monte Carlo Simulation**: Across 20,000 randomized scenarios, the probability of the project having a negative NPV was **0.0%**. 
+    * Even the worst 5% of outcomes were still highly profitable.
+
+**5. Is it possible that there is bias in your study?**
+
+While bias is a potential risk in any study, this work used specific methodologies to minimize it and ensure the very positive outcome is a robust finding, not a preconceived one.
+
+* **In the Systematic Review**: 
+    * **PRISMA methodology** was used to prevent "***cherry-picking***" positive studies.
+* **In the Cost-Benefit Analysis**: Positive result is not based on a single set of optimistic assumptions. 
+    * The extensive **uncertainty and risk analysis** (scenarios, Monte Carlo simulations) was specifically designed to avoid bias. 
+    * The fact that the NPV remains positive even under pessimistic conditions proves the result is robust and not just an artifact of wishful thinking.
+
+**6. If you were a data scientist that has done this paper, what could you tell about warnings to a policy maker?**
+
+I would offer ***three key warnings*** to a policy maker:
+
+1.  **The benefits are not automatic.** My models show that the positive NPV is highly dependent on achieving the predicted clinical outcomes and high user adoption rates. 
+    * I recommend a **staged rollout with pilot programs** to verify impact before large-scale investment.
+2.  **A one-size-fits-all policy will be socially inefficient.** The distributional analysis shows that the project's value is higher when implemented in lower-income regions. 
+    * Therefore, policy should use **equity-focused** guided investments where it will generate the greatest return, rather than a uniform national subsidy.
+3.  **The biggest risk is human, not technological.** My sensitivity analysis clearly shows that **user uptake is the most critical variable** driving the project's success. 
+    * Policy must support the technology maintainance, but also the training and choice required to ensure clinicians and patients actually use it.
