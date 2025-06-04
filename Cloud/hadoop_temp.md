@@ -1,3 +1,15 @@
+<!-- KaTeX auto-render header -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ]
+  });"></script>
+
+
 **I. Introduction and Related Work**
 HDFS is a core component of Apache Hadoop, enabling the partitioning of data and computation across numerous hosts. This allows clusters to scale storage capacity, computation power, and I/O bandwidth by adding more commodity servers. HDFS separates metadata storage (on a dedicated **NameNode**) from application data storage (on **DataNodes**), similar to GFS, PVFS, and Lustre. Unlike systems using RAID, HDFS ensures data durability by replicating file content across multiple DataNodes (typically three), which also enhances data transfer bandwidth and opportunities for computation locality.
 

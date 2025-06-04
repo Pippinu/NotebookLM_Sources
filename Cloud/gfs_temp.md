@@ -1,3 +1,14 @@
+<!-- KaTeX auto-render header -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ]
+  });"></script>
+
 This paper details the design and implementation of the Google File System (GFS), a scalable distributed file system created to handle Google's massive data processing needs. It provides fault tolerance on inexpensive commodity hardware and delivers high aggregate performance.
 
 **1. Introduction**

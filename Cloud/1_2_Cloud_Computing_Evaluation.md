@@ -1,3 +1,14 @@
+<!-- KaTeX auto-render header -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ]
+  });"></script>
+
 # Study Questions for NIST SP 500-322: Evaluation of Cloud Computing Services
 
 ## Purpose and Approach of NIST SP 500-322

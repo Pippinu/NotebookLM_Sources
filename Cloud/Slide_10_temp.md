@@ -1,3 +1,14 @@
+<!-- KaTeX auto-render header -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ]
+  });"></script>
+
 These slides provide a comprehensive guide to performance evaluation, particularly focusing on cloud computing systems and services. The presentation covers general concepts, specific metrics for cloud environments, testing techniques, a structured procedure for evaluation, and practical advice for setting up experiments and interpreting results, especially in the context of auto-scaling.
 
 **1. General Concepts of Performance Evaluation (Slides 3-4)**

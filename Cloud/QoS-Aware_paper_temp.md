@@ -1,3 +1,15 @@
+<!-- KaTeX auto-render header -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ]
+  });"></script>
+
+
 ### Resume of "QoS-Aware Autonomic Resource Management in Cloud Computing: A Systematic Review"
 
 *(Skipping Chapters 2, 4, 9, 10, and 11 as requested)*
