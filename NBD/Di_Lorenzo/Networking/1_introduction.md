@@ -1,4 +1,16 @@
-## Chapter 1: Introduction
+<!-- KaTeX auto-render header -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ]
+  });"></script>
+
+
+# Chapter 1: Introduction
 
 ## Some definitions
 
@@ -106,7 +118,7 @@ Several key design issues must be addressed in layered networks:
     * **flow control**: preventing a fast sender from overwhelming a slow receiver.
     * **congestion control**: managing network overload.
 
-### The OSI Reference Model
+## The OSI Reference Model
 The **OSI (Open Systems Interconnection) Model** is a conceptual framework that standardizes the functions of a telecommunication or computing system in seven distinct layers.
 
 1.  **Physical Layer**: **Transmits** raw bits over a communication channel.
@@ -133,7 +145,7 @@ The **OSI (Open Systems Interconnection) Model** is a conceptual framework that 
 6.  **Presentation Layer**: Concerned with the syntax and semantics of the information being transmitted.
 7.  **Application Layer**: This layer ensures that data sent by one system is readable by the destination system and to the end user.
 
-### The TCP/IP Reference Model
+## The TCP/IP Reference Model
 The TCP/IP model is another layered framework that is more practical and widely implemented than the OSI model. Its strength lies in its protocols. It consists of four layers:
 
 1.  **Link Layer**: Describes what happens on the physical link (e.g., Ethernet, 802.11).
@@ -145,7 +157,7 @@ The Session and Presentation layers from the OSI model are not present in the TC
 
 ![alt text](./images/osi_vs_tcpip.png)
 
-### Our Reference Model
+## Our Reference Model
 For the purpose of this course, a hybrid 5-layer model is used, which combines aspects of the OSI and TCP/IP models:
 
 1.  **Physical Layer**: Transmits bits as signals over a medium.
