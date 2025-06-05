@@ -220,43 +220,74 @@ This creates a robust and efficient square grid constellation, making QAM ideal 
         $$\Large r = s_m + n$$
         Here, $\large r$ is the received vector, $\large s_m$ is the vector of the transmitted symbol, and $\large n$ is the noise vector. Geometrically, the noise "pushes" the transmitted constellation point $\large s_m$ to a new location $\large r$.
 
-        $$
-        \Large s_m(t) = \sum_{j=1}^{N} s_{mj}\phi_j(t) \Rightarrow \mathbf{s}_m = [s_{m1}, \dots, s_{mN}]^T \text{ with } s_{mj} = (\mathbf{s}_m, \phi_j)
+        $$ 
+        \Large s_m(t) = \sum_{j=1}^{N} s_{mj}\phi_j(t) \Rightarrow \mathbf{sm} = [s_{m1}, \dots, s_{mN}]^T \text{ with } s_{mj} = (\mathbf{s}_m, \phi_j) 
         $$
 
         $$
         \Large n(t) = \sum_{j=1}^{N} n_j\phi_j(t) \Rightarrow \mathbf{n} = [n_1, \dots, n_N]^T \text{ with } n_j = (\mathbf{n}, \phi_j)
         $$
 
-### The Maximum a Posteriori (MAP) Decision Rule (TO REVISE FORMULAS)
+### Maximum a Posteriori (MAP) Decision Rule
 
-The MAP rule is the optimal strategy for minimizing error probability when the **a priori** probabilities of the symbols are **known**.
+The **Maximum a Posteriori (MAP) decision rule** is a fundamental criterion used in digital demodulation to minimize the probability of symbol error when deciding which symbol was transmitted, given a received signal. It selects the symbol $s_m$ that maximizes the *a posteriori* probability $P[s_m|r]$, which is the probability that symbol $s_m$ was sent, given the received signal $r$.
 
-* **Goal**: To choose the symbol $\large \hat{m}$ that maximizes the *a posteriori* probability $\large P[s_m|r]$ (the probability of symbol $\large s_m$ having been sent, given that $\large r$ was received).
-    $$\Large \hat{m} = \underset{1\le m\le M}{\operatorname{arg\,max}} P[s_m|r]$$
-* **Using Bayes' Theorem**:
+Mathematically, the MAP decision rule is expressed as:
 
-    $$\Large P[s_m|r] = \frac{P[r|s_m]P[s_m]}{P[r]} \propto P[r|s_m]P[s_m]$$
+$$\large \hat{m} = \underset{1\le m\le M}{\operatorname{arg\,max}} P[s_m|r]$$
 
-    Since $\large P[r]$ is constant for all symbols in the comparison, maximizing $\large P[s_m|r]$ is equivalent to maximizing the numerator.
+Where:
 
-    Let $\large p_{s_m} = P[s_m]$ be the a priori probability of symbol $\large s_m$.
-* **Gaussian Likelihood**: The term $\large P[r|s_m]$ is the likelihood of receiving $\large r$ if symbol $\large s_m$ was sent. \
-For an AWGN channel, this is given by an N-dimensional Gaussian distribution:
-    $$\Large P[r|s_m] = \left(\frac{1}{\sqrt{\pi N_0}}\right)^N e^{-\frac{||r-s_m||^2}{N_0}}$$
-* **Logarithmic Simplification**: To simplify calculations, we can maximize the logarithm instead. This leads to:
-    $$\Large \hat{m} = \underset{1\le m\le M}{\operatorname{arg\,max}} \frac{N_0}{2}\left( \ln p_{m} - \frac{1}{2}||r-s_m||^2 \right)$$
+* $\hat{m}$ is the index of the estimated transmitted symbol.
+* $M$ is the total number of possible transmitted symbols.
+* $P[s_m|r]$ is the *a posteriori* probability of symbol $s_m$ given the received signal $r$.
 
-    Expanding the squared norm $$\large ||r-s_m||^2 = ||r||^2 - 2(r,s_m) + ||s_m||^2$$
-    
-    note that:
-    * $\large ||r||^2$ is constant for all $\large m$ (meaning for all $\large s_m$)
-    * $\large ||s_m||^2 = E_m$ (energy of symbol $\large s_m$)
-    
-    Using natural log, the decision rule transforms. The slide derivation results in (after some steps of scaling and removing constant terms common to all $\large s_m$):
-    $$\Large \hat{s}_m = \underset{1\le m\le M}{\operatorname{arg\,max}} \left( \frac{N_0}{2}\log p_{s_m} - \frac{1}{2}E_m + (r,s_m) \right)$$
-    where $\large (r,s_m)$ is the correlation $\large \int r(t)s_m(t)dt$.
-    The term $\large \eta_m = \frac{N_0}{2}\log p_{s_m} - \frac{1}{2}E_m$ can be considered a pre-computed "bias" for each symbol $\large s_m$.
+Using Bayes' theorem, we can rewrite the *a posteriori* probability as:
+
+$$\large P[s_m|r] = \frac{P[r|s_m]P[s_m]}{P[r]}$$
+
+Since $P[r]$ does not depend on the transmitted symbol $s_m$, it is a constant factor for all symbols and can be ignored in the maximization process. Thus, the MAP rule simplifies to:
+
+$$\large \hat{m} = \underset{1\le m\le M}{\operatorname{arg\,max}} P[r|s_m]P[s_m]$$
+
+Where:
+
+* $\large P[r|s_m]$ is the likelihood function, representing the conditional probability of receiving $r$ given that $s_m$ was transmitted.
+* $\large P[s_m]$ is the *a priori* probability of transmitting symbol $s_m$.
+
+#### MAP Rule for AWGN Channel
+
+In an Additive White Gaussian Noise (AWGN) channel, the noise is Gaussian distributed.  If we assume the noise has a power spectral density of $N_0/2$, the likelihood function $P[r|s_m]$ can be expressed as:
+
+$$\large P[r|s_m] = \left(\frac{1}{\sqrt{\pi N_0}}\right)^N e^{-\frac{||r-s_m||^2}{N_0}}$$
+
+Where:
+
+* $\large N$ is the dimensionality of the signal space.
+* $\large ||r - s_m||^2$ is the squared Euclidean distance between the received signal $r$ and the possible transmitted signal $s_m$.
+
+Substituting this into the MAP decision rule, we get:
+
+$$\large \hat{m} = \underset{1\le m\le M}{\operatorname{arg\,max}} P[s_m] \left(\frac{1}{\sqrt{\pi N_0}}\right)^N e^{-\frac{||r-s_m||^2}{N_0}}$$
+
+Taking the logarithm (which is a monotonic function and doesn't change the argmax) and simplifying, we often arrive at a form like:
+
+$$\large \hat{m} = \underset{1\le m\le M}{\operatorname{arg\,max}} \left( \log P[s_m] - \frac{||r-s_m||^2}{N_0} \right)$$
+
+Or, by including a factor of $\frac{N_0}{2}$ which is sometimes used for convenience in certain derivations:
+
+$$\large \hat{m} = \underset{1\le m\le M}{\operatorname{arg\,max}} \left( \frac{N_0}{2}\log P[s_m] - \frac{1}{2}||r-s_m||^2 \right)$$
+
+Expanding the squared Euclidean distance, we can further express this as:
+
+$$\large \hat{m} = \underset{1\le m\le M}{\operatorname{arg\,max}} \left( \frac{N_0}{2}\log P[s_m] - \frac{1}{2}E_m + (r, s_m) \right)$$
+
+Where:
+
+* $\large E_m$ is the energy of the signal $s_m$.
+* $\large (r, s_m)$ is the inner product (correlation) between the received signal $r$ and the possible transmitted signal $s_m$.
+
+This final form highlights that the MAP decision rule in an AWGN channel essentially involves correlating the received signal with each possible transmitted signal, and choosing the signal that yields the largest correlation, adjusted by the signal energy and *a priori* probabilities.
 
 ### Maximum Likelihood (ML) Simplification (NO?)
 
