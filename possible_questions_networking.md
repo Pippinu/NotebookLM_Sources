@@ -120,3 +120,37 @@ A new intern is setting up a new device on a company network and causes some iss
     * **Second Action (Handling Broadcast):** The switch will then look at the **destination MAC address** of the incoming frame. For a **broadcast ARP request**, the destination MAC address is the special **broadcast MAC address** (`FF:FF:FF:FF:FF:FF`). When a switch receives a frame with a broadcast destination MAC address, it performs **flooding**: it sends a copy of the frame to **all its interfaces (ports) *except* the one on which it arrived**. This ensures the broadcast message reaches all devices on the local network segment.
 
 ---
+# 4. Network Layer
+
+### Question: Distance Vector Update Scenario
+
+Imagine a network where **Router B** is trying to determine the best path to reach a specific **Destination Host X**. Router B has direct connections to several other routers, including **Router A** and **Router C**.
+
+You know the following information for Router B:
+* Its current best-known path to **Destination Host X** is via **Router A**, with a total estimated cost of **10**.
+* Its direct cost to communicate with **Router A** is **2**.
+* Its direct cost to communicate with **Router C** is **3**.
+
+Now, **Router C** sends its periodic distance vector update to Router B. In this update, Router C advertises that its current best-known path to **Destination Host X** has an estimated cost of **5**.
+
+1.  Based solely on the information Router C just sent and Router B's direct cost to C, what is the *potential total cost* for Router B to reach Destination Host X if it were to route through Router C? Show your calculation.
+2.  Given Router B's current best path to Destination Host X (via Router A with a cost of 10) and the new potential path via Router C (calculated in part 1), would Router B update its routing table to use Router C as the next hop for Destination Host X? Explain your reasoning based on the core update rule of Distance Vector Routing.
+3.  How does the general process of Distance Vector Routing, where each router selects its next hop based on the minimum sum of its direct cost to a neighbor and that neighbor's advertised cost to the destination, reflect the **Bellman optimality principle**?
+
+### Answer and Explanation
+
+1.  **Based solely on the information Router C just sent and Router B's direct cost to C, what is the *potential total cost* for Router B to reach Destination Host X if it were to route through Router C? Show your calculation.**
+    * **Calculation and Explanation:**
+        * Router C's advertised best cost to Destination Host X = 5.
+        * Router B's direct cost to Router C = 3.
+        * **Potential total cost for Router B via Router C = (Router B to Router C direct cost) + (Router C's advertised cost to X)**
+        * Calculation: $3 + 5 = 8$.
+        * Therefore, the potential total cost for Router B to reach Destination Host X if it were to route through Router C is **8**.
+
+2.  **Given Router B's current best path to Destination Host X (via Router A with a cost of 10) and the new potential path via Router C (calculated in part 1), would Router B update its routing table to use Router C as the next hop for Destination Host X? Explain your reasoning based on the core update rule of Distance Vector Routing.**
+    * **Explanation:** Yes, Router B would update its routing table. Router B's current best path to Destination Host X has a cost of 10 (via Router A). The newly calculated potential path via Router C has a cost of 8. According to the core update rule of Distance Vector Routing, a router always selects the path that offers the *minimum (shortest) total cost* to a given destination. Since $8 < 10$, Router B would update its routing table to set Router C as the next hop for Destination Host X, with the new cost of 8.
+
+3.  **How does the general process of Distance Vector Routing, where each router selects its next hop based on the minimum sum of its direct cost to a neighbor and that neighbor's advertised cost to the destination, reflect the **Bellman optimality principle**?**
+    * **Explanation:** The Bellman optimality principle states that if a path from a source to a destination is optimal, then any subpath within that optimal path is also optimal. Distance Vector Routing embodies this principle by continually making locally optimal decisions. When a router computes its best path to a destination by choosing the neighbor that offers the minimum combined cost (its direct cost to the neighbor plus the neighbor's advertised cost to the destination), it inherently assumes that the neighbor's advertised cost represents an optimal path *from that neighbor* to the destination. By aggregating these local optimal choices, the algorithm iteratively works towards establishing globally optimal paths across the entire network, consistent with the Bellman optimality principle.
+
+---
