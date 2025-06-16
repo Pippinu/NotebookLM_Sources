@@ -1,3 +1,15 @@
+<!-- KaTeX auto-render header -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ]
+  });"></script>
+
+
 # Resource Management and Scheduling
 
 ## Single-Server Models
@@ -374,3 +386,254 @@ SRPT is the **preemptive** version of SJF and is the gold standard for minimizin
 * **Optimality:** It is proven that SRPT **minimizes the mean system time** ($\large E[S]$) for a single-server queue among all HOL policies.
 * **Performance Ranking:** The mean system times for these policies are ordered as follows:
     $$\Large E[S_{SRPT}] \le E[S_{SJF}] \le E[S_{FCFS}]$$
+
+## Server Sharing Policies
+
+Unlike Head-of-Line (HOL) policies that serve one task at a time, server sharing policies conceptually **divide the server's capacity among multiple tasks simultaneously**.
+
+The **primary motivation** for this approach is to provide **isolation**, which serves two main purposes:
+* To **protect** well-behaved applications from being starved by aggressive, resource-hungry flows.
+* To provide **differentiated** and **guaranteed service** levels to different classes of users.
+
+### Processor Sharing (PS): The Ideal of Perfect Fair Sharing
+
+![alt text](./images/processeor_sharing.png)
+
+**Processor Sharing (PS)** is a theoretical model that represents the ideal form of perfect fairness.
+
+* **The Concept:** If there are $\large n$ tasks in the queue at any given moment, the PS model assumes that the server's capacity (*mean service rate*: $\large \mu$) is instantly and perfectly divided, with **each task receiving exactly $\large 1/n$ of the total capacity**. 
+    * If a new task arrives, the shares are instantaneously recalculated.
+* **Performance:** The **mean system time** (***wait + service***) in a PS system is given by the simple formula:
+    $$\Large E[S] = \frac{E[X]}{1 - \rho}$$
+    A key feature of PS is that its performance depends only on the mean service time ($\large E[X]$), making it **insensitive to service time variability**. 
+    * This is a **major advantage over FCFS**, whose performance degrades significantly as service time variance increases.
+* **Practical Implementation - Round-Robin (RR):** In the real world, a CPU cannot truly work on multiple tasks at the exact same instant. 
+    * **Round-Robin (RR)** scheduling is the practical approximation of the PS ideal. 
+    * The server gives a small, fixed-size time slice (called a *quantum*) to each task in the queue, cycling through them in a circular order. 
+    * If the time quantum is very small compared to the job sizes, the effect is very close to perfect, simultaneous sharing.
+
+#### Derivation of Mean System Time
+
+To understand the performance of PS, we can derive its mean system time ($\large E[S]$) by first considering a practical approximation with a very small, fixed-size work quantum, $\large \Delta$.
+
+1.  **System Time in the Quantum Model:** 
+
+    The total time it takes to complete a job of size $\large x$, denoted $\large S(x)$, is the sum of the time spent working on its own quanta plus the time spent waiting for the server to work on the quanta of all other jobs in the queue.
+
+      * A job of size $\large x$ requires $\large x/\Delta$ of these small work quanta to be completed.
+      * In **each "round"** of service, the server completes **one quantum for our job** (taking time $\large \Delta$) and **one quantum for each of the other** $\large Q(t_k)$ jobs in the queue at that time (taking time $\large \Delta \times Q(t_k)$).
+      * The **total time** is the sum over all $\large x/\Delta$ rounds:
+        $$\Large S(x) = \sum_{k=0}^{x/\Delta - 1} [\Delta + \Delta Q(t_k)] = x + \frac{x}{x / \Delta} \sum_{k=0}^{x/\Delta - 1} Q(t_k) = x + \Delta \sum_{k=0}^{x/\Delta - 1} Q(t_k)$$
+
+        where $\large t_{k+1} = t_{k} + \Delta [1 + Q(t_k)], k\ge0$
+
+2.  **Taking the Average (Slide 185):** 
+
+    At statistical equilibrium, the average number of other jobs in the queue during the service of our job is simply the **overall average number of jobs in the system**, $\large E[Q]$. 
+    
+    So, the average system time for a job of size $\large x$ is:
+    $$\large E[S|X=x] = x + x E[Q]$$
+    By removing the conditioning on $\large x$, we get the average system time for any job:
+    $$\large E[S] = E[X] + E[X]E[Q]$$
+
+3.  **Applying Little's Law:** We use Little's Law ($E[Q] = \lambda E[S]$) to substitute for $\large E[Q]$:
+    $$\large E[S] = E[X] + E[X](\lambda E[S])$$
+
+4.  **Solving for E[S]:** Recalling that ***server utilization factor*** is $\large \rho = \lambda E[X]$, we can solve for $\large E[S]$:
+    $$\large E[S] = E[X] + \rho E[S]$$   
+    $$\large E[S](1 - \rho) = E[X]$$   
+    $$\Large E[S] = \frac{E[X]}{1 - \rho}$$
+
+#### Summary of PS Performance Metrics
+
+The derivation and behavior of PS lead to three key performance results:
+
+  * **Mean Response Time:**
+    $$\Large E[S] = \frac{E[X]}{1 - \rho}$$
+  * **Mean Response Time for a job of size $\large x$:**
+    $$\Large E[S|X=x] = \frac{x}{1 - \rho}$$
+  * **Slowdown for a job of size $\large x$:**
+    $$\Large \text{Slowdown} = \frac{1}{1 - \rho}$$
+
+    ***Slowdown***: the ratio of response time to service time, $\large S(x)/x$
+
+The most important result is the **constant slowdown**. 
+* In a PS system, a job that is twice as long will, on average, take exactly twice as long to complete. 
+* This is why PS is considered the ideal of "fair" scheduling, as it does not discriminate based on job size.
+
+#### Example of PS Execution
+
+![alt text](./images/example_PS_execution.png)
+
+The diagram on this slide provides a visual trace of how PS handles three jobs arriving at different times.
+
+  * **At time 12:** Job 3 arrives (size 6) and receives 100% of the server's capacity.
+  * **At time 24:** Job 2 arrives (size 10). The server's capacity is now split 50/50 between Job 2 and Job 3. They are both being served simultaneously, but at half the speed.
+  * **At time 48:** Job 1 arrives (size 24). The capacity is now split three ways. Each of the three active jobs receives 1/3 of the server's capacity.
+  * **As jobs complete:** When one job finishes, its share of the capacity is instantly redistributed among the remaining active jobs.
+
+Unlike HOL policies where some jobs are completely paused, under PS all jobs in the system are always making progress. The final completion times ($\large S_1=18, S_2=18, S_3=18$) reflect this concurrent processing.
+
+### Comparison: Processor Sharing (PS) vs. First-Come, First-Served (FCFS)
+
+While both PS and FCFS are fundamental scheduling policies, they have vastly different performance characteristics, especially when dealing with variable workloads.
+
+* **For FCFS**, the *mean system time* is given by the Pollaczek-Khinchine formula, which can be written as:
+    $$\Large E[S]_{FCFS} = E[X] + \frac{\rho E[X]}{1 - \rho} \frac{1 + C_X^2}{2}$$
+    (Where $\large C_X^2$ is the squared coefficient of variation of the service time, a measure of its variability).
+
+* **For PS**, the *mean system time* is:
+    $$\Large E[S]_{PS} = \frac{E[X]}{1 - \rho}$$
+
+#### The Key Insight: Insensitivity to Variance
+
+By comparing these two formulas, we can see the most important difference:
+
+1.  **FCFS is sensitive to variance:** Formula includes the $\large C_X^2$ term. 
+    * This means that as the **variability of job sizes increases** (e.g., a mix of very short and very long jobs), the average system time under FCFS **gets worse**, even if the mean service time $\large E[X]$ stays the same. 
+    * A long job can get "stuck" at the head of the queue and delay all subsequent jobs.
+
+2.  **PS is insensitive to variance:** Formula **does not** contain any term related to service time variance. 
+    * Its performance depends only on the mean service time $\large E[X]$ and the load $\large \rho$. 
+    * This makes PS **extremely robust**. Whether the jobs are all the same size or have wildly different sizes, the **average system time remains the same**.
+
+**Conclusion:** For the highly variable workloads common in data centers, **PS provides far more predictable and stable performance than FCFS**.
+
+### Generalized Processor Sharing (GPS): Weighted Fair Sharing
+
+**Generalized Processor Sharing (GPS)** extends the concept of PS to allow for *differentiated* service rather than strictly equal service. This is the model for **weighted fair sharing**.
+
+* **The Concept:** Instead of giving every task an equal $\large 1/n$ share, GPS assigns a **weight** (e.g., $\large \phi_i$) to each task or class of tasks. The amount of service a task receives is **proportional to its weight** relative to the sum of the weights of all other tasks currently in the system ($\large B(t)$):
+    $$\Large \text{Share for task } i = \mu \times \frac{\phi_i}{\sum_{j \in B(t)} \phi_j}$$
+* **The Goal:** GPS is designed to provide predictable and controllable service differentiation. 
+    * For instance, a cloud provider can offer different tiers of service by assigning different weights to customers.
+* **Practical Implementation - Weighted RR / Weighted Fair Queueing (WFQ) / Credit-Based Scheduling (CBS):** Just as *Round Robin* (RR) is a practical implementation of PS, more advanced algorithms are needed to approximate GPS. 
+    * **Weighted Fair Queueing (WFQ)** and **Credit-Based Scheduling (CBS)** are two such practical implementations that use various mechanisms to ensure that, over time, each task receives its designated **proportional share of the server's capacity**.
+
+### Credit-Based Scheduling (CBS)
+
+**Credit-Based Scheduling (CBS)** is a practical, work-conserving algorithm that implements the ideal of **Generalized Processor Sharing (GPS)**. Instead of serving tiny slices of multiple jobs at once, CBS serves one entire job at a time but uses a clever accounting system (a "credit") to ensure that, over the long run, every class of traffic receives its fair, weighted share of the server's capacity.
+
+---
+
+#### CBS Algorithm
+
+The algorithm works by maintaining a **credit counter**, $\large K_j$, for each **class** $\large j$. 
+* This counter tracks **how "behind" a class is** relative to its fair share. 
+* The algorithm always **prioritizes** the class that is **most "deserving" of service**.
+
+The process can be summarized in these steps:
+
+1.  **Initialization:** At the beginning, all credit counters ($\large K_j$) are set to zero.
+2.  **Selection Step:** At any point when the server is ready to choose a new job, it looks at all the job classes that have tasks waiting in the queue. For each of these classes, it calculates a "***virtual finish time***", $\large y_j$, which is essentially the **job's size adjusted by its current credit and its weight**:
+    $$\Large y_j = \frac{L_j - K_j}{\phi_j}$$
+    Where $\large L_j$ is the **size of the job** at the head of the queue and $\large \phi_j$ is the **weight for that class**. 
+    
+    The **algorithm then selects** the class, $\large j^*$, that has the **minimum** virtual finish time.
+3.  **Service Step:** The server dedicates its full capacity to serving the **entire** head-of-line job from the selected class, $\large j^*$.
+4.  **Credit Update Step:** This is the ***key to fairness***.
+    * The credit for the class that was just served ($\large K_{j^*}$) is reset to **zero**.
+    * The credit for **all other waiting classes** is **increased**. 
+        * They are **rewarded for having waited**, and the amount of credit they gain is **proportional to their weight** ($\large \phi_j$). 
+        * This ensures they will have a **higher priority** in future selection steps.
+5.  **Loop:** The process repeats from Step 2.
+
+#### Fairness of CBS
+
+This algorithm comes with a **mathematical guarantee of fairness**. 
+
+![alt text](./images/CBS_fairness_th.png)
+
+The theorem on proves that the amount of service any two classes receive, when normalized by their weights, can never differ by more than a small, bounded amount. 
+* This prevents any single class from being starved and guarantees that the server's capacity is shared according to the specified weights over time.
+
+## Performance Comparison, Fairness, and the All-Can-Win Theorem
+
+### Overall Policy Comparison
+
+This graphs compare the mean response time of all the policies we've discussed. 
+
+The **key takeaway** is that as service time variance increases, policies like **FCFS degrade dramatically**, while **PS is unaffected** and **SRPT remains the best performer**.
+
+![alt text](./images/overall_policy_comparison.png)
+
+### The Fairness Dilemma
+
+This leads to a critical dilemma:
+* **SRPT** provides the best overall mean response time but seems "unfair" because it heavily prioritizes short jobs at the expense of long ones.
+* **PS** is perfectly "fair" in the sense that all jobs experience the same slowdown factor, but its average performance is worse than SRPT's.
+
+### The All-Can-Win Theorem
+
+This apparent trade-off between performance and fairness is resolved by the **All-Can-Win Theorem**.
+
+* **Theorem:** In an M/G/1 system, if the server load is sufficiently light (specifically, if $\large \rho < 1/2$), then the response time under **SRPT is better than the response time under PS for *all* job sizes**.
+    $$\Large R_{SRPT}(x) \le R_{PS}(x), \quad \forall x \quad (\text{if } \rho < 1/2)$$
+* **Intuition:** The **main penalty** for a large job under SRPT is waiting for small jobs to be served first. 
+    * In a **lightly loaded system**, an arriving large job is likely to find the server idle, so its initial wait is small. 
+    * Once it begins service, it gets the *full* server capacity, whereas under PS it would have to *share* that capacity. 
+    * This makes its service phase **much faster**, more than compensating for any small initial wait.
+* **Lesson Learned:** This theorem teaches a powerful lesson: sometimes, instead of designing complex scheduling policies, it's more effective to simply **ensure that servers are not too heavily loaded**. 
+    * Keeping utilization below a certain threshold can unlock significant performance benefits and even **resolve fairness concerns**.
+    * Often capacity is an **abundant resource**, it's **not free** but **comes easier** than other features.
+
+## Case Study: Applying SRPT to Web Server Farms
+
+This case study demonstrates how the theoretical performance benefits of the **Shortest Remaining Processing Time (SRPT)** policy were achieved in practice by modifying a standard web server's scheduling logic.
+
+### The Problem: Traditional Web Servers and Fair Sharing (Slide 198)
+
+![alt text](./images/case_study_SRPT.png)
+
+Traditionally, web servers handle **thousands of simultaneous client requests** for files. 
+* To do this fairly, they use a **Processor Sharing (PS)**-like policy, giving each connection a small slice of the available resources.
+
+The key challenge in applying a size-based policy like SRPT is to correctly answer two questions:
+
+1.  **What is the actual resource** being scheduled?
+2.  **What is the "job size"** that the scheduler can use to make decisions?
+
+### The SRPT Approach: Redefining the Bottleneck and Job Size
+
+![alt text](./images/case_study_SRPT_1.png)
+
+The researchers' key insight was to correctly identify the **true bottleneck** and the corresponding job size.
+
+1.  **The Resource:** The primary bottleneck for a busy web server is not its CPU, but its **limited outbound Internet bandwidth** purchased from an Internet Service Provider (ISP). 
+    * The **goal** is to schedule the sharing of this bandwidth link.
+2.  **The Job:** A "job" is a client's request to transfer a file.
+3.  **The Job Size:** The "size" of the job is simply the **size of the file being transferred**, which is information the server knows as soon as the request is made.
+
+With these definitions, it becomes possible to implement a size-based policy like SRPT to manage the bandwidth.
+
+### The Implementation: Modifying the Linux Kernel (Slide 200)
+
+![alt text](./images/case_study_SRPT_2.png)
+
+The core of the work was a **modification to the Linux kernel's network scheduler**. 
+
+The slide contrasts the standard approach with the new SRPT approach.
+
+  * **Upper Diagram (Standard PS):** In a *standard Linux system*, all TCP sockets corresponding to different client connections are **treated fairly**. 
+    * They take turns placing their data packets into a single transmit queue for the network card. 
+    * This is a practical implementation of **Processor Sharing (*PS*)**.
+
+  * **Lower Diagram (SRPT Implementation):** The kernel was modified to replace the single queue with multiple **priority queues**. 
+    * A connection's socket is placed into a queue based on the **remaining size of the file** it is transferring. 
+    * Sockets for files with only a small amount of data left to send are put in the highest-priority queue. 
+    * The scheduler **always** serves packets from the highest-priority non-empty queue. 
+    * This is a direct and effective implementation of the **SRPT** policy.
+
+### Performance Results
+
+The following plot shows the dramatic performance improvement achieved.
+
+![alt text](./images/case_study_SRPT_3.png)
+
+The graph plots the *mean response time* ($\large E[T]$) for file transfers against the *system load* ($\Large \rho$).
+
+  * The **PS curve** shows the performance of the standard, unmodified web server.
+  * The **SRPT curve** shows the performance of the modified server.
+
+The result is unambiguous: the **SRPT implementation provides a significantly lower mean response time** across all load levels. 
+* This case study is a powerful real-world validation that **applying the correct scheduling** theory can yield **massive performance gains**.
