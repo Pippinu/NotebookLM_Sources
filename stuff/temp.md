@@ -1,35 +1,37 @@
-### LAS Numerical Examples
+### The "Big Picture": A Policy Dilemma
 
-To better understand how the Least Attained Service (LAS) policy works in practice, we can look at two complementary examples: a step-by-step trace and a graph of its general performance.
+The policies discussed so far present a clear trade-off:
 
-#### Example 1: A Step-by-Step Trace (Slide 179)
+  * **Push Algorithms (JSQ, PoD):** These are **delay-optimal in the heavy-traffic regime**, providing excellent performance when the system is under stress. However, they suffer from non-zero dispatching delays and can have high messaging overhead.
+  * **Pull Algorithms (JIQ):** These have **zero dispatching delay** and very low message overhead. However, their performance is poor in the heavy-traffic regime, as they devolve into a simple RANDOM policy.
 
-This example traces the execution of three jobs with different service times arriving at different moments, showing how LAS dynamically changes which job is being served.
+The goal, therefore, is to design a policy that combines the best properties of both approaches: the low overhead of "pull" policies with the high-performance guarantees of "push" policies.
 
-  * **Scenario:**
-      * Job 3 (service time = 2) arrives at time 12.
-      * Job 2 (service time = 8) arrives at time 24.
-      * Job 1 (service time = 4) arrives at time 48.
-  * **Execution Trace:**
-    1.  At time 12, Job 3 arrives and starts running.
-    2.  At time 24, Job 2 arrives. Since Job 2 has received **zero** service so far, it has the "least attained service," and the server preempts Job 3 to start working on Job 2.
-    3.  At time 48, Job 1 arrives. It also has zero attained service, so it has priority. The server preempts Job 2 and starts working on Job 1.
-    4.  The server will continue to work on whichever active job has the least accumulated service time, switching between them until they are all complete.
-  * **Result vs. FCFS:**
-      * **With LAS:** The completion times are $\large S_1=14$, $\large S_2=8$, $\large S_3=2$. The policy manages to finish the two smaller jobs (2 and 3) very quickly.
-      * **With FCFS:** The completion times would have been $\large S_1=8$, $\large S_2=10$, $\large S_3=10$. The jobs would be served strictly in their arrival order.
+### A Hybrid Approach: The Join-Below-Threshold (JBT) Algorithm
 
-This trace clearly shows how LAS reorders execution to prioritize jobs that are presumed to be short, even if they arrive later.
+The Join-Below-Threshold (JBT) algorithm is a hybrid "pull-based" scheme designed to achieve this goal. It operates with two key components: the dispatcher and the server.
 
-#### Example 2: General Performance Characteristics (Slide 180)
+#### JBT($\large r$) Algorithm: Dispatcher's Role
 
-This graph illustrates the general performance of LAS by plotting the conditional response time as a function of the job's size, for different system loads ($\large \rho$).
+The dispatcher's logic is as follows:
 
-  * **X-axis:** The normalized service demand ($\large x/E[X]$), representing how large a job is compared to the average job size.
-  * **Y-axis:** The conditional response time ($\large R(x)/E[X]$), representing how long a job of a certain size takes to complete, normalized by the average service time.
-  * **Interpretation:**
-      * **Favors Short Jobs:** For small job sizes (left side of the graph), the response time is very low. LAS is extremely efficient for short tasks.
-      * **Penalizes Long Jobs:** For large job sizes (right side of the graph), the response time grows dramatically. LAS will constantly preempt long jobs to service newly arriving short jobs, so large jobs can take a very long time to complete.
-      * **Impact of Load:** This effect becomes much more extreme as the system load ($\large \rho$) increases. At high loads (e.g., $\large \rho=0.8$), the penalty for long jobs is severe.
+1.  It maintains a list of server IDs that are known to have a queue length less than a predefined threshold, $\large r$.
+2.  When a new task arrives, the dispatcher checks its list of available servers.
+      * If the list is **not empty**, it picks a server ID from the list at random, sends the task to that server, and **immediately removes that ID from the list**. This is an optimistic measure, assuming that sending one task might push the server's queue over the threshold.
+      * If the list is **empty**, it defaults to a simple policy like RANDOM.
+3.  The dispatcher's list is only repopulated when it receives "I'm available" messages from the servers themselves.
 
-**Conclusion from both examples:** Together, these examples demonstrate both the *mechanism* of LAS (always prioritizing the job with the least completed work) and its *performance consequence* (excellent response times for short jobs at the expense of very long delays for large ones).
+#### JBT($\large r$) Algorithm: Server's Role
+
+The server's role is very simple and communication-efficient:
+
+1.  The server continuously monitors its own task queue.
+2.  A server sends a message to the dispatcher **only** at the specific moment its queue length drops from being equal to the threshold $\large r$ to $\large r-1$. This single message announces that it is now "below threshold" and available to be added back to the dispatcher's list.
+
+### Practical Implementation: The Adaptive JBT-d Algorithm
+
+A fixed threshold $\large r$ is not optimal, as the ideal queue length threshold changes with the overall system load. The **JBT-d** algorithm is a practical, **adaptive** version that dynamically adjusts this threshold.
+
+1.  **Adaptive Threshold Update:** The threshold is no longer a fixed value. Periodically (e.g., every $\large T$ time units), the dispatcher polls a small, random sample of $\large d$ servers. It then sets the **new threshold** to be the **minimum queue length** it observed among that sample. This new threshold is then communicated to all servers.
+2.  **Server Behavior:** Each server operates as in the basic JBT policy, sending its ID to the dispatcher whenever its queue length falls below the *current, dynamically updated* threshold.
+3.  **Dispatcher Behavior:** Upon a new task arrival, the dispatcher sends it to a server from its list of available (below-threshold) servers. If the list is empty, it dispatches the task randomly.
