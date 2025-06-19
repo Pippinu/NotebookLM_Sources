@@ -1,3 +1,14 @@
+<!-- KaTeX auto-render header -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ]
+  });"></script>
+
 # Resource Management and Scheduling
 
 ## Multiple Servers and Load Balancing
@@ -614,3 +625,4 @@ When servers use PS, the performance ranking is as follows:
 2.  **JSQ:** Performance is extremely close to optimal and is insensitive to job size variability.
 3.  **LWL:** Performs much better than SITA/RANDOM.
 4.  **SITA / RANDOM:** These have the worst performance in this scenario.
+
