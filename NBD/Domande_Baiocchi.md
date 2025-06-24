@@ -89,3 +89,80 @@ The primary reason for a real-world design to intentionally use oversubscription
 * **Reason (Cost Reduction):** A fully non-oversubscribed (1:1) network requires a massive number of high-speed ports on the aggregation and core switches to match the total bandwidth of all the servers. These high-port-count switches are extremely expensive. By using oversubscription, designers operate on the principle of **statistical multiplexing**—the assumption that not all servers will transmit at their maximum capacity at the same time. This allows them to build the network with fewer uplinks, which in turn means they can use switches with fewer ports or a smaller number of total switches, significantly lowering the hardware cost.
 
 * **The Performance Trade-Off:** The trade-off is sacrificing the **guarantee of non-blocking performance**. While a non-oversubscribed network guarantees full bandwidth between any two servers at all times, an oversubscribed network does not. During periods of heavy, widespread East-West traffic, the oversubscribed links at the aggregation and core layers can become **bottlenecks**, leading to network congestion, increased queuing latency, and potential packet loss. It is a calculated engineering decision that trades guaranteed peak performance for a much more economical design.
+
+## **Set 4: Advanced Network Theory & Clos Networks**
+
+### Question 1
+Why is a 3-stage Clos Network a more scalable and cost-effective solution for building a large, non-blocking switch fabric compared to a single, monolithic crossbar switch? Explain the difference in their complexity.
+
+**Answer:**
+A Clos Network is more scalable because it dramatically reduces the hardware complexity required to build a large non-blocking switch, directly translating to lower cost and power consumption. The key difference lies in how their complexity scales with the number of ports, N.
+
+* **Crossbar Switch:** A crossbar requires a grid of crosspoints to connect any of its N inputs to its N outputs. The number of these crosspoints grows quadratically, with a complexity of **$O(N^2)$**. For a large switch (e.g., 256 ports), this would require $256^2 = 65,536$ crosspoints, which is prohibitively expensive and complex.
+* **Clos Network:** A Clos network builds a large "virtual" switch from multiple stages of smaller, cheaper switches. By optimizing the size and number of switches in each stage, its complexity grows at a much slower rate of **$O(N\sqrt{N})$**.
+
+This difference means that for the same number of ports, the Clos network requires far less hardware to achieve the same non-blocking performance, making it the practical choice for all large-scale switching fabrics.
+
+### Question 2
+What is the key difference between a **Strictly Non-Blocking (SNB)** and a **Rearrangeably Non-Blocking (RNB)** Clos network in terms of hardware requirements and the user experience when establishing a new connection?
+
+**Answer:**
+The key difference lies in the trade-off between hardware cost and guaranteed performance.
+
+* **Strictly Non-Blocking (SNB):**
+    * **Hardware:** Requires more middle-stage switches, specifically `m ≥ 2n - 1`.
+    * **User Experience:** Provides the best possible performance. A new connection between an idle input and an idle output is **guaranteed to be established instantly** at hardware speed, without affecting any other existing connections. This is the gold standard for predictable, low-latency performance.
+* **Rearrangeably Non-Blocking (RNB):**
+    * **Hardware:** Is more cost-effective as it requires fewer middle-stage switches (`m ≥ n`).
+    * **User Experience:** Performance is not guaranteed. While a new connection can always be made, the network might first have to **rearrange existing connections** to free up a path. This rearrangement process is slow, computationally complex, and can introduce significant, unpredictable delays in connection setup, making it unsuitable for high-performance data center networks.
+
+In essence, the SNB design invests more in hardware upfront to guarantee performance, which is the approach taken by modern data center fabrics like the Fat-Tree.
+
+***
+
+## **Set 5: DCell and BCube Topologies**
+
+### Question 1
+Explain the fundamental difference in the recursive construction of a DCell versus a BCube. How does this difference affect the hardware cost and the networking responsibility placed on the servers?
+
+**Answer:**
+The fundamental difference lies in *what* is used to interconnect the smaller cells at each recursive step.
+
+* **DCell Construction:** DCell is designed to be **switch-minimal**. A level-`k` DCell is built from a large number of level-`k-1` sub-cells, and the interconnection between them is achieved primarily through **direct server-to-server links**. The servers themselves use their multiple NICs to form the higher-level fabric.
+* **BCube Construction:** BCube offloads the interconnection responsibility to dedicated hardware. A level-`k` BCube is built from `n` level-`k-1` sub-cells, but it adds **$n^k$ new, dedicated switches** at level `k` whose sole purpose is to interconnect those sub-cells.
+
+**Consequences:**
+* **Hardware Cost & Server Role:** DCell has a very low switch count but places a **heavy networking burden on its servers**, which must actively participate in packet forwarding. BCube has a much higher switch count (and thus higher cost) but **reduces the networking overhead on its servers**, allowing them to focus more on application processing.
+
+### Question 2
+What is the primary advantage of a recursive topology like DCell or BCube over a traditional Fat-Tree in terms of fault tolerance? Use the **"node-disjoint paths"** metric in your explanation.
+
+**Answer:**
+The primary advantage of DCell and BCube over a Fat-Tree is their vastly superior **fault tolerance**, which can be quantified by the "node-disjoint paths" metric.
+
+* **Fat-Tree:** In a Fat-Tree, each server has only a single link to its Top-of-Rack (ToR) switch. This means there is only **1 node-disjoint path** from the server into the network fabric. This creates a critical single point of failure: if that one ToR switch fails, the entire rack of servers is disconnected from the data center.
+* **DCell and BCube:** In a level-`k` recursive topology, every server is equipped with `k+1` network ports, which connect to different parts of the fabric. This provides **k+1 node-disjoint paths** from each server into the network. This means the network can withstand up to `k` simultaneous switch or link failures along the paths between two servers and still maintain connectivity, making it far more resilient.
+
+***
+
+## **Set 6: Jellyfish Topology**
+
+### Question 1
+Why can a Jellyfish random graph topology theoretically support more servers at full throughput than a structured Fat-Tree built with the exact same number of switches and links? What is the key network metric at the heart of this performance gain?
+
+**Answer:**
+A Jellyfish topology can support more servers at full throughput because it is structurally more efficient at connecting nodes. The key network metric at the heart of this gain is the **average path length**.
+
+1.  **The Throughput Bound:** As established by network theory, the maximum throughput of a network is inversely proportional to its average path length ($TH \propto 1/\overline{h}$). To support more traffic with the same amount of hardware, a network must deliver packets as efficiently as possible, meaning with the fewest number of hops on average.
+2.  **Path Length Comparison:**
+    * A **Fat-Tree's** rigid, hierarchical structure forces traffic that needs to travel between different pods to take a long, predetermined path "up" to the core layer and then "down" again.
+    * A **Jellyfish** random graph, by contrast, is not constrained by a hierarchy. Its random inter-switch connections create numerous "shortcuts" across the network fabric.
+3.  **The Result:** These shortcuts mean that the average number of hops a packet must take to get between any two servers is statistically lower in a Jellyfish network than in a Fat-Tree of the same size. By minimizing the average path length, Jellyfish maximizes the overall network throughput, allowing it to support ~25% more servers at full capacity with the same equipment.
+
+### Question 2
+A common criticism of random topologies is that they would be a "cabling nightmare." What is the practical physical layout strategy proposed by the Jellyfish designers to overcome this challenge?
+
+**Answer:**
+The Jellyfish designers solve this problem by separating the **logical topology** from the **physical layout**. While the network's connections are logically random, its physical implementation can remain highly structured and organized.
+
+The proposed solution is to physically place all the Top-of-Rack (ToR) switches that form the random graph together in a **central switch cluster**. This allows for neat, organized, and manageable **cable bundles** to be run from this central cluster out to the individual server racks where the servers are located. This avoids the "nightmare" scenario of having random, individual point-to-point wires crisscrossing the entire data center floor.
