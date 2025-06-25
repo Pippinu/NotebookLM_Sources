@@ -319,9 +319,118 @@ In essence, the SNB design invests more in hardware upfront to guarantee perform
 
 ***
 
+### Question 3
+
+Explain the fundamental problem with crossbar switches that led to the development of the Clos Network architecture. How does a 3-stage Clos Network aim to solve this problem, and what are its two main non-blocking properties?
+
+**Answer:**
+A crossbar switch is the simplest conceptual model for a switch that can connect any of its N inputs to any of its N outputs, inherently providing a non-blocking capability. It achieves this by using an N x N grid of connection points (crosspoints). However, its fundamental problem is its **high complexity**, as the number of crosspoints required grows quadratically with the number of ports, reaching $O(N^2)$. This quadratic growth makes crossbar switches prohibitively expensive and physically impractical for networks with a large number of ports.
+
+The **Clos Network** architecture, proposed by Charles Clos in 1953, aimed to solve this complexity problem by enabling the construction of a switch with equivalent non-blocking capabilities but significantly lower complexity, using a modular **three-stage design**. These stages are:
+* **Ingress Stage:** Composed of `r` smaller switches, each of size $n \times m$.
+* **Middle Stage:** Composed of `m` switches, each of size $r \times r$.
+* **Egress Stage:** Composed of `r` switches, each of size $m \times n$.
+In this design, the total number of input/output lines for the system is $N = n \times r$. Each switch in a stage is connected to every switch in the adjacent stages.
+
+A Clos Network provides two main **non-blocking properties**:
+* **Strictly Non-Blocking:** This property means that a new connection between an idle input and an idle output can always be established immediately, without requiring any alteration or re-routing of existing connections. This requires `m >= 2n - 1` middle-stage switches.
+* **Rearrangeably Non-Blocking:** This property ensures that a new connection can always be made, but it might necessitate re-routing (rearranging) one or more existing connections to free up a path for the new connection. This has a less stringent requirement of `m >= n` middle-stage switches.
+
+***
+
+### Question 4
+
+Explain how the theoretical 3-stage Clos Network design is transformed into the practical Fat-Tree topology commonly used in Data Center Networks. Describe the conceptual steps involved in this transformation.
+
+**Answer:**
+The theoretical 3-stage Clos Network design is transformed into the practical Fat-Tree topology commonly used in Data Center Networks through a series of conceptual steps that leverage recursion and a "folding" mechanism.
+
+The transformation begins with a **recursive application** of the Clos design: the large switches that constitute the middle stage of the initial 3-stage Clos network are themselves replaced with their own, smaller 3-stage Clos networks. This iterative process allows for the creation of a deeper, multi-stage network fabric.
+
+After this recursive construction, the resulting multi-stage feed-forward network is conceptually **"folded" in half** along a central vertical axis. This "folding" action fundamentally transforms the architecture:
+* The network becomes **bidirectional**, which is a crucial characteristic for efficient server-to-server communication in data centers, moving away from the unidirectional nature of a pure Clos switch fabric.
+* The formerly separate **ingress and egress stages** (input and output switches) of the Clos network are merged to form the **edge and aggregation layers within the Fat-Tree's pods**.
+* The **central middle stage** of the original Clos network transforms directly into the **core layer of the Fat-Tree**.
+
+This conceptual process demonstrates how the abstract, mathematically optimized Clos switch fabric translates into the concrete, bidirectional Fat-Tree network topology, which uses identical commodity switches for its construction.
+
+***
+
+### Question 5
+
+Explain how the mathematical optimization of a Clos Network's complexity leads to the specific scaling formula for the number of servers in a Fat-Tree. What is the optimal number of crosspoints for a Clos network, and how does it compare to a crossbar switch?
+
+**Answer:**
+The mathematical optimization of a Clos Network's complexity directly leads to the specific scaling formula for the number of servers in a Fat-Tree by applying the practical constraint that all switches in the network must be identical `n`-port commodity switches.
+
+The derivation for the Fat-Tree server scaling formula ($S = n^3/4$) is as follows:
+1.  **Foundation in Clos Parameters:** The Fat-Tree is derived from a recursively built Clos network. For uniform commodity switches, the Clos parameters must adhere to specific relationships, such as $k=n$ (where `n` is the number of ports on the commodity switch) and $r/k=n/2$.
+2.  **Determining 'r':** From these constraints, we can derive the value of `r` (the number of ingress/egress switches in the original Clos model, corresponding to the total count of lowest-tier switches in the Fat-Tree after folding) as $r=n^2/2$.
+3.  **Calculating Total Servers (S):** In a Fat-Tree, the total number of servers (`S`) is the product of the total number of lowest-tier switches (`r`) and the number of servers connected to each such switch (`n/2`).
+4.  **Final Formula:** Substituting the derived `r` into this relationship yields $S = (n^2/2) \times (n/2) = n^3/4$. This demonstrates that the Fat-Tree's practical design is an optimized application of Clos theory, allowing efficient construction with a single type of commodity switch.
+
+Regarding the optimization of Clos Network complexity:
+The total number of crosspoints (`X`) for a 3-stage, rearrangeably non-blocking Clos network (where `m = n`) is given by the formula: $X = 2rn^2 + nr^2$. For a fixed total number of ports `N` (where $N=nr$), this formula can be optimized by balancing the parameters `r` and `n`.
+
+The **optimal number of crosspoints** for a Clos network is $X^* = 2N\sqrt{2N}$. This optimal complexity has a scaling of $O(N\sqrt{N})$.
+
+**Comparison to a crossbar switch:** A crossbar switch has a complexity of $O(N^2)$. For a large number of ports `N`, the $O(N\sqrt{N})$ complexity of an optimized Clos network is **significantly lower** than the quadratic complexity of a crossbar switch. This makes the Clos design a much more scalable and cost-effective solution for building large switching fabrics.
+
+***
+
+### Question 6
+
+Explain the concept of an "application-oblivious throughput bound" in DCNs. What is the main formula for this bound, and how does its intuition relate to maximizing network throughput?
+
+**Answer:**
+An "application-oblivious throughput bound" in Data Center Networks (DCNs) refers to a theoretical upper limit on network throughput that is independent of any specific application traffic *pattern*. Unlike a "path," which is a specific sequence of links and nodes a flow takes, a "traffic pattern" describes the overall characteristics of traffic behavior across the network, including communication pairs, volumes, and temporal dynamics. This bound provides a general measure of the network's maximum potential performance, regardless of the specific workload an application might generate.
+
+The normalized throughput (TH) of a network is bounded by factors derived from its structure and usage. Specifically, it is limited by:
+* The **total number of links** in the network (`l`).
+* The **average path length** (in hops) taken by the flows ($\overline{h}$).
+* The **total number of active flows** in the network ($\nu_f$). (This refers to the count of currently active data streams or connections.)
+
+The main formula for this bound is:
+$TH \le \frac{l}{\overline{h}\nu_f}$
+
+The intuition behind this formula highlights that to maximize the normalized throughput (i.e., achieve the best possible minimum performance for all flows), the **denominator ($\overline{h}\nu_f$) must be minimized**. Since the total number of links (`l`) is largely determined by the network's scale and $\nu_f$ represents the demand, the primary variable to optimize through network design is the **average path length ($\overline{h}$)**. Therefore, DCN designs that inherently achieve **shorter average path lengths** for their traffic flows will translate to higher theoretical throughput and more optimal performance.
+
+***
+
+### Question 7
+
+How does the concept of an "r-regular graph" apply to Data Center Network (DCN) topologies, and what specific scaling formula for throughput is derived for this type of graph? What is the Moore Bound, and how does it relate to optimizing path length in r-regular graphs?
+
+**Answer:**
+An **r-regular graph** is a specific type of graph used to model Data Center Network (DCN) topologies, characterized by uniform connectivity properties. In this context:
+* **Uniform Degree:** Every node (representing a switch) in the graph has the exact same number of connections, or 'degree', equal to `r`. In a DCN, `r` ports are used to connect to other switches, while the remaining `(n - r)` ports (where `n` is the total ports on the commodity switch) are used to connect to servers.
+* **Minimum Nodes:** The total number of nodes (`S`, representing switches) must be at least `r + 1`.
+* **Even Product:** The product of the number of nodes (`S`) and the degree (`r`) must be an even number.
+
+For this specific r-regular structure, the **application-oblivious throughput bound** (as discussed in the previous question) can be specialized. Since the total number of links (`l`) in an r-regular graph is `S * r`, the throughput bound becomes:
+$TH \le \frac{Sr}{\overline{h}\nu_f}$
+
+The **Moore Bound** provides a theoretical lower limit on the **average shortest path length ($\overline{h}$)** for a given r-regular graph. It represents the best possible performance in terms of how quickly nodes can be reached, indicating the maximum efficiency in path length for a network with specific characteristics.
+
+The **Moore Bound** is crucial for optimizing throughput in r-regular graphs because, as established by the application-oblivious throughput bound, maximizing network throughput fundamentally requires minimizing the average path length ($\overline{h}$). The Moore Bound provides the theoretical minimum possible value for $\overline{h}$ for a given graph, thereby indicating the ultimate limit of throughput performance achievable by optimizing path length in such topologies.
+
+
 ## **Set 6: DCell and BCube Topologies**
 
 ### Question 1
+
+Describe the core idea behind "recursive" and "server-centric" topologies in Data Center Networks (DCNs). What is a fundamental feature of these designs regarding the role of servers in the network fabric, and what are the implications of this approach?
+
+**Answer:**
+The **core idea** behind "recursive" topologies in Data Center Networks (DCNs) is to construct a large network by iteratively connecting smaller, identical structural units, often referred to as "cells," to form progressively larger and higher-level network structures.
+
+These designs are fundamentally "server-centric," meaning that **servers become active participants in the network fabric** by directly performing packet forwarding functions. This approach shifts some of the traditional network forwarding complexity away from dedicated switches, contrasting with switch-centric topologies (like Fat-Tree and Clos networks) where switches are the primary forwarding elements.
+
+A **fundamental feature** of this server-centric approach is that servers are necessarily equipped with **multiple Network Interface Cards (NICs)**. These multiple ports enable servers to connect to switches at various network levels or even directly to other servers, facilitating their role in the network fabric. The **implications** of this design choice include potentially higher costs, given the necessity for servers with multiple NICs, and an increase in wiring complexity compared to simpler tree topologies.
+
+***
+
+### Question 2
 Explain the fundamental difference in the recursive construction of a DCell versus a BCube. How does this difference affect the hardware cost and the networking responsibility placed on the servers?
 
 **Answer:**
@@ -333,7 +442,91 @@ The fundamental difference lies in *what* is used to interconnect the smaller ce
 **Consequences:**
 * **Hardware Cost & Server Role:** DCell has a very low switch count but places a **heavy networking burden on its servers**, which must actively participate in packet forwarding. BCube has a much higher switch count (and thus higher cost) but **reduces the networking overhead on its servers**, allowing them to focus more on application processing.
 
-### Question 2
+### Question 3
+
+Describe the construction and key properties of **DCell** and **BCube** topologies. How do these two recursive topologies compare in terms of server involvement in forwarding, switch count, and scalability?
+
+**Answer:**
+Both DCell and BCube topologies share the same fundamental base unit, a level-0 cell (DCell$_0$ or BCube$_0$), which consists of `n` servers connected to a single `n`-port switch. The key distinction between them lies in how higher-level structures are recursively created and interconnected.
+
+**DCell Construction and Properties:**
+* **Construction:** A DCell$_1$ is formed from `n+1` copies of DCell$_0$s. Each server in a given DCell$_0$ connects to exactly one server in each of the other `n` DCell$_0$s, forming a fully-meshed network of cells with exactly one link between every pair of DCell$_0$s. Generalizing, a higher-level DCell$_k$ is built from a collection of DCell$_{k-1}$ cells. These are interconnected to form a full mesh: each server within a DCell$_{k-1}$ uses one of its free ports to link to a server in a different DCell$_{k-1}$ within the same DCell$_k$. This allows for a total of $t_{k-1}+1$ cells (where $t_{k-1}$ is the number of servers in a DCell$_{k-1}$) to be fully interconnected.
+* **Server NICs:** Each server in a DCell$_k$ requires `k+1` network ports.
+* **Scalability (Server Count):** DCell exhibits **double-exponential growth** in the number of servers, where $t_k \approx t_{k-1}^2$ (more precisely, $t_k = (t_{k-1}+1) \times t_{k-1}$). This rapid growth leads to massive scalability, supporting millions of servers with very few recursion levels.
+
+**BCube Construction and Properties:**
+* **Construction:** A higher-level BCube$_k$ is built from `n` copies of a BCube$_{k-1}$. It uses $n^k$ *additional* `n`-port switches to interconnect these BCube$_{k-1}$ cells. These additional level-`k` switches connect to exactly one server in each of the `n` different BCube$_{k-1}$ cells, establishing the higher-level structure.
+* **Server NICs:** Like DCell, a server in a BCube$_k$ requires `k+1` network ports.
+* **Scalability (Server Count):** BCube achieves **exponential growth** in server count, where $S = n^{k+1}$. While still highly scalable, its growth rate is slower than DCell's.
+* **Scalability (Switch Count):** BCube uses a significantly higher number of switches compared to DCell, as it adds $n^k$ dedicated `n`-port switches at each level `k` of its construction, with the total number of switches given by $S_w = (k+1)n^k$.
+
+**Comparison between DCell and BCube:**
+
+| Feature                    | DCell                                                                                                              | BCube                                                                                                            |
+| :------------------------- | :----------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------- |
+| **Server Involvement** | Servers are heavily involved in packet forwarding.                                 | Servers are less involved in forwarding due to the higher number of dedicated switches handling the load. |
+| **Switch Count** | Low. Uses a minimal number of switches, primarily those in the base DCell$_0$ units (no additional switches at higher levels). | High. Adds many dedicated switches at each recursive level.                                                                                                |
+| **Scalability (Servers)** | Extremely High (double-exponential: $t_k \approx t_{k-1}^2$).                    | High (exponential: $S = n^{k+1}$).                                                                                                                                                                 |
+| **Path Quality** | Paths can be non-uniform, potentially creating bottlenecks.                           | Provides more uniform paths between servers.                                                                                                                                                             |
+| **Common Drawbacks** | Both designs share the drawbacks of requiring expensive servers with multiple NICs and having increased wiring complexity compared to tree topologies. |
+
+***
+
+### Question 4
+
+Describe the concept of "flexible and optical topologies" in DCNs. What are their main advantages, and what key enabling technologies allow for their reconfigurability? Explain the trade-off associated with these technologies.
+
+**Answer:**
+In Data Center Networks (DCNs), topologies can be broadly classified as fixed or flexible based on their ability to adapt after deployment. While fixed topologies maintain a static physical structure, which can be inefficient for the highly dynamic and unbalanced traffic patterns prevalent in DCNs, **flexible topologies** are designed to overcome this by allowing their network structure to be reconfigured at runtime, adapting to current traffic demands.
+
+The **main advantages** of flexible and optical topologies stem from their dynamic adaptability:
+* **High Bandwidth:** Optical fibers inherently provide enormous bandwidth, capable of supporting up to terabits per second (Tbps) on a single fiber.
+* **Reconfigurability:** They allow for the dynamic creation and tearing down of direct, high-capacity physical links (lightpaths) between different parts of the network. This enables the network to adjust its connections to match real-time traffic demands, for example, by reconfiguring to handle traffic spikes or prioritizing high-traffic connections.
+
+The **key enabling technology** for their reconfigurability is **optical switching**. This capability is significantly enhanced by **Dense Wavelength Division Multiplexing (DWDM)**, a technology that allows multiple data streams to be transmitted simultaneously over a single optical fiber, each on a different wavelength of light. DWDM adheres to a standard frequency grid, enabling up to 80 distinct channels, each capable of high data rates (e.g., 10 Gbit/s) with minimal signal attenuation and dispersion. Optical Cross-Connects (OXCs) are devices that switch these high-speed optical signals between fibers without electrical conversion. A common technology used to build OXCs is **MEMS (Micro-Electro-Mechanical Systems)**, which consists of arrays of microscopic, movable mirrors that precisely redirect light beams.
+
+However, a significant **trade-off** associated with these optical technologies is the **slow reconfiguration time of MEMS-based optical switches**. While highly efficient and low-power, MEMS switches have reconfiguration times on the order of milliseconds. This is a considerable drawback compared to the nanosecond speeds of electrical packet switches, making them less suitable for instantly adapting to the ultra-low latency and rapidly changing traffic demands often characteristic of DCNs.
+
+***
+
+### Question 5
+
+Explain the concept of "Network Virtualization" as applied to DCNs, outlining its two basic principles. Describe the distinction between the "serving network" and the "client network," and elaborate on the key advantages this isolation provides.
+
+**Answer:**
+The concept of **Network Virtualization** in Data Center Networks (DCNs) is applied to simplify their often complex topologies and interconnections. It operates on two basic principles: **layering**, which decomposes the network design problem into a 'client' and 'server' relationship, and **standard interfaces**, which define how these different layers interact.
+
+This approach leads to a clear distinction between two network layers:
+* The **Client Network** is the virtual, logical view of the network as perceived by a tenant or application. It appears simple and straightforward, effectively hiding the underlying physical complexity. From this 'IP level view,' different application components appear connected by direct logical links through a single 'Transport Network'.
+* The **Serving Network** is the underlying physical infrastructure, comprising the actual switches, routers, and links that form the complex DCN. In reality, a simple logical link in the client network is mapped onto a multi-hop path that traverses several physical devices within the serving network.
+
+A primary advantage of network virtualization is its ability to support **multi-tenancy**, allowing multiple independent 'client' networks to run concurrently on a single physical 'serving' network. This isolation provides several key advantages:
+* **Performance Isolation:** Traffic patterns or potential congestion in one client network do not affect the performance of another.
+* **Enhanced Security:** The separation prevents one tenant from accessing or interfering with another tenant's data traffic.
+* **Flexibility:** Each tenant gains the ability to implement their own custom routing protocols and IP addressing schemes within their virtual network, without conflicts with other tenants or the physical network.
+
+***
+
+### Question 6
+
+Identify and explain the core evaluation metrics used to compare different DCN topologies. Group them into relevant categories such as "Core Evaluation Metrics" and "Hardware Redundancy Metrics," and describe what each measures.
+
+**Answer:**
+To evaluate and contrast different DCN topologies, a set of **key performance indicators (KPIs)** are used to quantify their suitability for a data center environment. These metrics provide insights into aspects like performance, scalability, and resilience.
+
+**Core Evaluation Metrics:**
+* **Diameter:** Defined as the longest of the shortest paths between any two servers in the network. A larger diameter generally implies less effective routing, higher transmission latency, and potentially higher network resource consumption for end-to-end communication.
+* **Bandwidth:** Measures the maximum communication capacity offered between servers. This metric is typically analyzed under various traffic patterns, such as 'one-to-one' (a single source to a single destination) or 'all-to-all' (every server communicating simultaneously with every other server).
+* **Bisection Width & Bandwidth:** These are critical measures of network robustness and capacity, especially for handling all-to-all communication. To determine them, the network's nodes are conceptually split into two equally sized groups. The **bisection width** is the minimum number of links that must be removed to completely disconnect these two groups. The **bisection bandwidth** is the sum of the capacities (in bits/second) of the links in that minimum cut. A larger bisection bandwidth indicates a network is less prone to central bottlenecks and can better handle heavy all-to-all traffic.
+
+**Hardware Redundancy Metrics:**
+This category assesses the fault tolerance of a network by quantifying the number of alternate paths available and its resilience to failures.
+* **Node-disjoint Paths:** This is the minimum number of paths between any two servers that do not share any common intermediate nodes (e.g., switches). It directly measures the network's resilience to individual switch failures.
+* **Edge-disjoint Paths:** This is the minimum number of paths between any two servers that do not share any common links. It measures the network's resilience to individual link failures.
+* **Redundancy Level:** A network has a redundancy level equal to `r` if it remains connected after removing any set of `r` links, but can be disconnected by removing a specific set of `r+1` links. This metric assesses the network's ability to maintain connectivity despite link failures.
+* **f-fault tolerance:** A network is considered f-fault tolerant if it remains connected even after any `f` components (which can be either links or nodes) have failed.
+
+### Question 7
 What is the primary advantage of a recursive topology like DCell or BCube over a traditional Fat-Tree in terms of fault tolerance? Use the **"node-disjoint paths"** metric in your explanation.
 
 **Answer:**
